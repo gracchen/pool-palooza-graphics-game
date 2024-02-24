@@ -11,14 +11,14 @@ export class Project_Scene extends Scene {
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
-            planet4: new defs.Subdivision_Sphere(4),
+            ball: new defs.Subdivision_Sphere(4),
             table: new defs.Square(),
         };
 
         // *** Materials
         this.materials = {
-            planet4: new Material(new defs.Phong_Shader(),
-                {ambient: 1, diffusivity: 0.4, specularity: 1, color: hex_color("#ADD8E6")}),
+            ball: new Material(new defs.Phong_Shader(),
+                {ambient: 0.9, specularity: 0.2, color: hex_color("#dfe6c1")}),
             table: new Material(new defs.Phong_Shader(),
             { ambient: 1, color: hex_color("#4F7942") }),
         }
@@ -58,7 +58,8 @@ export class Project_Scene extends Scene {
 
         this.draw_light(context, program_state, model_transform, t);
 
-        this.draw_planet4(context, program_state, model_transform, t);
+        this.draw_ball(context, program_state, [6, 0, 1], "#dfe6c1");
+        this.draw_ball(context, program_state, [-6, 0, 1], "#FFFFFF");
 
         this.draw_table(context, program_state, model_transform, t);
 
@@ -71,7 +72,6 @@ export class Project_Scene extends Scene {
     draw_table(context, program_state, model_transform, t){
         let table_transform = model_transform.times(Mat4.scale(20, 10, 1));
         this.shapes.table.draw(context, program_state, table_transform, this.materials.table);
-
     }
 
     draw_light(context, program_state, model_transform, t) {
@@ -80,11 +80,11 @@ export class Project_Scene extends Scene {
         program_state.lights = [new Light(light_position, sun_color, 20)];
     }
 
-    draw_planet4(context, program_state, model_transform, t) {
-        let planet4_transform = model_transform;
-        planet4_transform = planet4_transform.times(Mat4.translation(6, 0, 1)); 
+    draw_ball(context, program_state, position, color) {
+        let ball_transform = Mat4.translation(...position)
+        let ball_material = this.materials.ball.override({color: hex_color(color)});
         
-        this.shapes.planet4.draw(context, program_state, planet4_transform, this.materials.planet4);
+        this.shapes.ball.draw(context, program_state, ball_transform, ball_material);
     }
     
 }
