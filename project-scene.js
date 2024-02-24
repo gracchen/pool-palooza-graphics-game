@@ -15,6 +15,7 @@ export class Project_Scene extends Scene {
             table: new defs.Square(),
         };
 
+
         // *** Materials
         this.materials = {
             ball: new Material(new defs.Phong_Shader(),
@@ -22,6 +23,8 @@ export class Project_Scene extends Scene {
             table: new Material(new defs.Phong_Shader(),
             { ambient: 1, color: hex_color("#4F7942") }),
         }
+
+        this.cue_ball_position = vec3(6, 0, 1);
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
     }
@@ -44,10 +47,12 @@ export class Project_Scene extends Scene {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
         if (!context.scratchpad.controls) {
-            this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+            // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
             program_state.set_camera(this.initial_camera_location);
         }
+
+        this.setup_mouse_controls(context.canvas);
 
 
         program_state.projection_transform = Mat4.perspective(
@@ -58,7 +63,7 @@ export class Project_Scene extends Scene {
 
         this.draw_light(context, program_state, model_transform, t);
 
-        this.draw_ball(context, program_state, [6, 0, 1], "#dfe6c1");
+        this.draw_ball(context, program_state, this.cue_ball_position, "#dfe6c1");
         this.draw_ball(context, program_state, [-6, 0, 1], "#FFFFFF");
 
         this.draw_table(context, program_state, model_transform, t);
@@ -68,6 +73,31 @@ export class Project_Scene extends Scene {
         }
 
     }
+
+    setup_mouse_controls(canvas) {
+        let dragging = false;
+        const rect = canvas.getBoundingClientRect(); // Get canvas position and size
+    
+        canvas.addEventListener('mousedown', (e) => {
+            dragging = true;
+        });
+    
+        canvas.addEventListener('mousemove', (e) => {
+            if (dragging) {
+                // Adjust sensitivity based on your needs
+                let sensitivity = 0.02; // Example sensitivity
+                // Convert mouse coordinates to canvas space
+                const x = (e.clientX - rect.left) / rect.width * 20 - 10; // Example conversion
+                const y = -((e.clientY - rect.top) / rect.height * 10 - 5); // Example conversion
+                this.cue_ball_position = vec3(x, y, 1); // Update cue ball position
+            }
+        });
+    
+        canvas.addEventListener('mouseup', () => {
+            dragging = false;
+        });
+    }
+    
 
     draw_table(context, program_state, model_transform, t){
         let table_transform = model_transform.times(Mat4.scale(20, 10, 1));
