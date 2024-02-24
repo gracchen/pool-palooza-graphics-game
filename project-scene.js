@@ -75,20 +75,14 @@ export class Project_Scene extends Scene {
     }
 
     draw_light(context, program_state, model_transform, t) {
-
-        let sun_radius = 2 + Math.sin(2 * Math.PI / 7 * t);
-        
-        let color_factor = (sun_radius - 1) / 2;
-        let sun_color = color(1, color_factor, color_factor, 1);
-
-        // lighting
-        const light_position = vec4(0, 0, 0, 1);
-        program_state.lights = [new Light(light_position, sun_color, 1000000)];
+        let sun_color = color(1, 1, 1, 1); 
+        const light_position = vec4(0, 0, 10, 1);
+        program_state.lights = [new Light(light_position, sun_color, 20)];
     }
 
     draw_planet4(context, program_state, model_transform, t) {
         let planet4_transform = model_transform;
-        planet4_transform = planet4_transform.times(Mat4.translation(6, 0, 0)); 
+        planet4_transform = planet4_transform.times(Mat4.translation(6, 0, 1)); 
         
         this.shapes.planet4.draw(context, program_state, planet4_transform, this.materials.planet4);
     }
@@ -97,7 +91,6 @@ export class Project_Scene extends Scene {
 
 class Gouraud_Shader extends Shader {
     // This is a Shader using Phong_Shader as template
-    // TODO: Modify the glsl coder here to create a Gouraud Shader (Planet 2)
 
     constructor(num_lights = 2) {
         super();
