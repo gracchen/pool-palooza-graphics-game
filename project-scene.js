@@ -30,6 +30,8 @@ export class Project_Scene extends Scene {
         this.cue_ball_color = "#dfe6c1";
         this.ball_color = "#FFFFFF"
 
+        this.cue_ball_start_time = 0;
+
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
     }
 
@@ -54,8 +56,8 @@ export class Project_Scene extends Scene {
             // Define the global camera and projection matrices, which are stored in program_state.
             program_state.set_camera(this.initial_camera_location);
         }
-
-        this.setup_mouse_controls(context.canvas);
+        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+        this.setup_mouse_controls(context.canvas, t);
         this.mouse_controls = new MouseControls(this.camera, program_state)
 
         //some failed attempts at using MouseControls.js to get mouse-to-world-space ray (https://github.com/junhongwang418/museum-3d/blob/c9d6631f78d22d312c2c29836a8b2cc63817f4a5/Controls/MovementControls.js#L49)
@@ -63,13 +65,11 @@ export class Project_Scene extends Scene {
         //program_state.current_ray = this.mouse_controls.current_ray;
         //console.log(program_state.current_ray);
         //program_state.ray_start_position =this.initial_camera_location;
-
-        this.collision_detected();
+        this.collision_detected(t);
 
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
-        
-        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+
         let model_transform = Mat4.identity();
 
         this.draw_light(context, program_state, model_transform, t);
@@ -85,21 +85,24 @@ export class Project_Scene extends Scene {
 
     }
 
-    setup_mouse_controls(canvas) {
+    setup_mouse_controls(canvas, time) {
         let dragging = false;
         const rect = canvas.getBoundingClientRect(); // Get canvas position and size
     
         canvas.addEventListener('mousedown', (e) => {
             dragging = true;
+            this.cue_ball_start_time = time;
         });
 
         canvas.addEventListener('mousemove', (e) => {
             if (dragging) {
+
                 // Adjust sensitivity based on your needs
                 let sensitivity = 0.02; // Example sensitivity
                 // Convert mouse coordinates to canvas space
                 const x = (e.clientX - rect.left) / rect.width * 20 - 10; // Example conversion
                 const y = -((e.clientY - rect.top) / rect.height * 10 - 5); // Example conversion
+                console.log(x)
                 this.cue_ball_position = vec3(x, y, 1); // Update cue ball position
             }
         });
@@ -125,18 +128,21 @@ export class Project_Scene extends Scene {
         });
     }
 
-    collision_detected() { //only between the two balls for now, turns red.
+    collision_detected(time) { //only between the two balls for now, turns red.
         let x1 = this.cue_ball_position[0]
         let y1 = this.cue_ball_position[1]
         let z1 = this.cue_ball_position[2]
+
         let x2 = this.ball_position[0]
         let y2 = this.ball_position[1]
         let z2 = this.ball_position[2]
 
+        let velocity = Math.sqrt((6 - x1) ** 2 + (0 - y1) ** 2 + (1 - z1) ** 2)/(time - this.cue_ball_start_time);
         //this.ball_position = vec3(x, y, 1);
         let dist = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2);
         if (dist < 2){
             console.log("colliding!");
+            console.log("velocity = ", velocity);
             this.cue_ball_color = "#ff7575";
             this.ball_color = "#ff7575"
             return true;
