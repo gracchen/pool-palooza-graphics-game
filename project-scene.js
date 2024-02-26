@@ -31,7 +31,11 @@ export class Project_Scene extends Scene {
         this.ball_color = "#FFFFFF"
 
         this.cue_ball_start_time = 0;
+        this.cue_ball_initial_x = 6;
+        this.cue_ball_initial_y = 0;
+        this.cue_velocity = vec3(0,0,0);
 
+        this.ball_velocity = vec3(0,0,0);
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
     }
 
@@ -57,9 +61,9 @@ export class Project_Scene extends Scene {
             program_state.set_camera(this.initial_camera_location);
         }
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
-        this.setup_mouse_controls(context.canvas, t);
+        this.setup_mouse_controls(context.canvas, dt);
         this.mouse_controls = new MouseControls(this.camera, program_state)
-
+        this.update_balls(dt);
         //some failed attempts at using MouseControls.js to get mouse-to-world-space ray (https://github.com/junhongwang418/museum-3d/blob/c9d6631f78d22d312c2c29836a8b2cc63817f4a5/Controls/MovementControls.js#L49)
         //this.mouse_controls.update(program_state);
         //program_state.current_ray = this.mouse_controls.current_ray;
@@ -85,24 +89,31 @@ export class Project_Scene extends Scene {
 
     }
 
-    setup_mouse_controls(canvas, time) {
+    update_balls(dt){
+        //ball
+        //console.log(this.cue_ball_position);
+        this.ball_position[0] += 1000000*dt*this.ball_velocity[0];
+        this.ball_position[1] += 1000000*dt*this.ball_velocity[1];
+
+        this.ball_velocity[0] -= 0.1*this.ball_velocity[0];
+        this.ball_velocity[1] -= 0.1*this.ball_velocity[1];
+    }
+
+    setup_mouse_controls(canvas, dt) {
         let dragging = false;
         const rect = canvas.getBoundingClientRect(); // Get canvas position and size
     
         canvas.addEventListener('mousedown', (e) => {
             dragging = true;
-            this.cue_ball_start_time = time;
         });
 
         canvas.addEventListener('mousemove', (e) => {
             if (dragging) {
-
-                // Adjust sensitivity based on your needs
-                let sensitivity = 0.02; // Example sensitivity
                 // Convert mouse coordinates to canvas space
                 const x = (e.clientX - rect.left) / rect.width * 20 - 10; // Example conversion
                 const y = -((e.clientY - rect.top) / rect.height * 10 - 5); // Example conversion
-                console.log(x)
+                //console.log((y - this.cue_ball_position[1]));
+                this.cue_velocity = vec3((x - this.cue_ball_position[0])/dt, (y - this.cue_ball_position[1])/dt, 0);
                 this.cue_ball_position = vec3(x, y, 1); // Update cue ball position
             }
         });
@@ -120,11 +131,12 @@ export class Project_Scene extends Scene {
         canvas.addEventListener('click', (e) => {
             let mouse = mouse_position(e)
             let mouse_screen_space = vec3(mouse[0], mouse[1], 0);
-            console.log(mouse_screen_space);
+            //console.log(mouse_screen_space);
         });
 
         canvas.addEventListener('mouseup', () => {
             dragging = false;
+            this.cue_velocity = vec3(0,0,0);
         });
     }
 
@@ -137,19 +149,19 @@ export class Project_Scene extends Scene {
         let y2 = this.ball_position[1]
         let z2 = this.ball_position[2]
 
-        let velocity = Math.sqrt((6 - x1) ** 2 + (0 - y1) ** 2 + (1 - z1) ** 2)/(time - this.cue_ball_start_time);
         //this.ball_position = vec3(x, y, 1);
         let dist = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2);
-        if (dist < 2){
-            console.log("colliding!");
-            console.log("velocity = ", velocity);
+        if (dist < 2) {
+            //console.log("colliding!");
             this.cue_ball_color = "#ff7575";
-            this.ball_color = "#ff7575"
+            this.ball_color = "#ff7575";
+            this.ball_velocity = this.cue_velocity;
+            //console.log("velocity = ", this.ball_velocity);
             return true;
         }
         else {
             this.cue_ball_color = "#dfe6c1";
-            this.ball_color = "#FFFFFF"
+            this.ball_color = "#FFFFFF";
             return false;
         }
     }
