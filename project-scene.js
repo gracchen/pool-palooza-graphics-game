@@ -71,9 +71,13 @@ export class Project_Scene extends Scene {
         //some failed attempts at using MouseControls.js to get mouse-to-world-space ray (https://github.com/junhongwang418/museum-3d/blob/c9d6631f78d22d312c2c29836a8b2cc63817f4a5/Controls/MovementControls.js#L49)
         //this.mouse_controls.update(program_state);
         //program_state.current_ray = this.mouse_controls.current_ray;
-        //console.log(program_state.current_ray);
         //program_state.ray_start_position =this.initial_camera_location;
         this.collision_detected(t);
+
+        this.table_width = 20;
+        this.table_height = 10;
+        this.wall_thickness = 1;
+        this.collided = false;
 
         let m = Mat4.orthographic(-1.0, 1.0, -1.0, 1.0, 0, 100);
 
@@ -118,11 +122,12 @@ export class Project_Scene extends Scene {
     update_balls(dt){
         //ball
         //console.log(this.cue_ball_position);
-        this.ball_position[0] += 1000000*dt*this.ball_velocity[0];
-        this.ball_position[1] += 1000000*dt*this.ball_velocity[1];
+        this.ball_position[0] += 8000000*dt*this.ball_velocity[0]; //ad-hoc compensation for glitchy manual calc velocity
+        this.ball_position[1] += 12000000*dt*this.ball_velocity[1]; //hopefully replace drag w/ with stabler shooting
 
-        this.ball_velocity[0] -= 0.1*this.ball_velocity[0];
-        this.ball_velocity[1] -= 0.1*this.ball_velocity[1];
+        //friction
+        this.ball_velocity[0] -= 0.15*this.ball_velocity[0];
+        this.ball_velocity[1] -= 0.15*this.ball_velocity[1];
     }
 
     setup_mouse_controls(canvas, dt) {
@@ -143,6 +148,8 @@ export class Project_Scene extends Scene {
                 const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2; // Example conversion
 
                 //console.log((y - this.cue_ball_position[1]));
+                //console.log("x:" + x.toFixed(3) + " pos:" + this.cue_ball_position[0].toFixed(3));
+                //console.log("y:" + y.toFixed(3) + " pos:" + this.cue_ball_position[1].toFixed(3));
                 this.cue_velocity = vec3((x - this.cue_ball_position[0])/dt, (y - this.cue_ball_position[1])/dt, 0);
                 this.cue_ball_position = vec3(x, y, 1); // Update cue ball position
             }
@@ -161,7 +168,6 @@ export class Project_Scene extends Scene {
         canvas.addEventListener('click', (e) => {
             let mouse = mouse_position(e)
             let mouse_screen_space = vec3(mouse[0], mouse[1], 0);
-            //console.log(mouse_screen_space);
         });
 
         canvas.addEventListener('mouseup', () => {
@@ -181,23 +187,40 @@ export class Project_Scene extends Scene {
 
         //this.ball_position = vec3(x, y, 1);
         let dist = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2);
+        let wall_bounce = false
         if (dist < 2) {
-            //console.log("colliding!");
-            this.cue_ball_color = "#ff7575";
+            if (this.collided === false) {
+                this.cue_ball_color = "#ff7575";
+                this.ball_velocity = this.cue_velocity;
+                this.collided = true;
+            } //else: not repeat velocity transfer while still in hitbox
+        } else {
+            this.collided = false;
+        } //undo repeat avoidance flag}
+        if (Math.abs(x2) > (this.table_width-this.wall_thickness)) { //checks horiz walls
+            this.ball_position[0] = (this.table_width-this.wall_thickness) * x2/(Math.abs(x2));
+            wall_bounce = true;
+        }
+        if (Math.abs(y2) > (this.table_height-this.wall_thickness)) { //checks vert walls
+            this.ball_position[1] = (this.table_height-this.wall_thickness) * y2/(Math.abs(y2));
+            wall_bounce = true;
+        }
+        if (wall_bounce === true) {
+            this.ball_velocity = vec3(-1*this.ball_velocity[0],-1*this.ball_velocity[1],-1*this.ball_velocity[2]);
+        }
+        if (this.collided === true || wall_bounce === true) {
             this.ball_color = "#ff7575";
-            this.ball_velocity = this.cue_velocity;
-            //console.log("velocity = ", this.ball_velocity);
-            return true;
+            return true
         }
-        else {
-            this.cue_ball_color = "#dfe6c1";
-            this.ball_color = "#FFFFFF";
-            return false;
-        }
+
+        this.cue_ball_color = "#dfe6c1";
+        this.ball_color = "#FFFFFF";
+        return false;
+
     }
 
     draw_table(context, program_state, model_transform, t){
-        let table_transform = model_transform.times(Mat4.scale(20, 10, 1));
+        let table_transform = model_transform.times(Mat4.scale(this.table_width, this.table_height, 1));
         this.shapes.table.draw(context, program_state, table_transform, this.materials.table);
     }
 
