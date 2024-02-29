@@ -14,6 +14,7 @@ export class Project_Scene extends Scene {
         this.shapes = {
             ball: new defs.Subdivision_Sphere(4),
             table: new defs.Square(),
+            wall: new defs.Square(),
         };
 
         // *** Materials
@@ -22,6 +23,9 @@ export class Project_Scene extends Scene {
                 {ambient: 0.9, specularity: 0.2, color: hex_color("#dfe6c1")}),
             table: new Material(new defs.Phong_Shader(),
             { ambient: 1, color: hex_color("#4F7942") }),
+            wall: new Material(new defs.Phong_Shader(),
+                { ambient: 1, color: hex_color("#732b11") }),
+
         }
 
         this.cue_ball_position = vec3(6, 0, 1);
@@ -71,17 +75,39 @@ export class Project_Scene extends Scene {
         //program_state.ray_start_position =this.initial_camera_location;
         this.collision_detected(t);
 
-        program_state.projection_transform = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, .1, 1000);
+        let m = Mat4.orthographic(-1.0, 1.0, -1.0, 1.0, 0, 100);
+
+        let plane_size = 23;
+        let ratio  = context.width / context.height;
+        let right  = plane_size;
+        let left   = -plane_size;
+        let top    = plane_size / ratio;
+        let bottom = -plane_size / ratio;
+        let near   = 1;
+        let far    = 100;
+
+        let A = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near));
+        let B = Mat4.translation(-left - right, -top - bottom, -near - far);
+        let C = Mat4.scale(2, 2, -2);
+        let orthographic_proj = A.times(B).times(C);
+
+        program_state.projection_transform = orthographic_proj;
+
+        // program_state.projection_transform = Mat4.perspective(
+        //     Math.PI / 4, context.width / context.height, .1, 1000);
 
         let model_transform = Mat4.identity();
 
         this.draw_light(context, program_state, model_transform, t);
 
+        var t_p2 = model_transform.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(8, 0, 0));
         this.draw_ball(context, program_state, this.cue_ball_position, this.cue_ball_color);
         this.draw_ball(context, program_state, this.ball_position, this.ball_color);
-
+        // this.draw_ball(context, program_state, vec3(0,0,1), this.ball_color);
+        // this.draw_ball(context, program_state, vec3(10,-2,1), this.ball_color);
+        // this.draw_ball(context, program_state, vec3(-10,-4,1), this.ball_color);
         this.draw_table(context, program_state, model_transform, t);
+        this.draw_wall(context, program_state, model_transform, t);
 
         if (this.attached !== undefined) {
             program_state.camera_inverse = this.attached().map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
@@ -108,10 +134,14 @@ export class Project_Scene extends Scene {
         });
 
         canvas.addEventListener('mousemove', (e) => {
+            // console.log((e.clientX / rect.width) - 0.5);
+            // console.log(rect.right);
             if (dragging) {
                 // Convert mouse coordinates to canvas space
-                const x = (e.clientX - rect.left) / rect.width * 20 - 10; // Example conversion
-                const y = -((e.clientY - rect.top) / rect.height * 10 - 5); // Example conversion
+
+                const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2; // Example conversion
+                const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2; // Example conversion
+
                 //console.log((y - this.cue_ball_position[1]));
                 this.cue_velocity = vec3((x - this.cue_ball_position[0])/dt, (y - this.cue_ball_position[1])/dt, 0);
                 this.cue_ball_position = vec3(x, y, 1); // Update cue ball position
@@ -169,6 +199,11 @@ export class Project_Scene extends Scene {
     draw_table(context, program_state, model_transform, t){
         let table_transform = model_transform.times(Mat4.scale(20, 10, 1));
         this.shapes.table.draw(context, program_state, table_transform, this.materials.table);
+    }
+
+    draw_wall(context, program_state, model_transform, t){
+        let wall_transform = model_transform.times(Mat4.translation(0, 0, -0.1)).times(Mat4.scale(21.1, 10.95, 0));
+        this.shapes.wall.draw(context, program_state, wall_transform, this.materials.wall);
     }
 
     draw_light(context, program_state, model_transform, t) {
