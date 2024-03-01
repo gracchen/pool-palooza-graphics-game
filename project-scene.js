@@ -191,7 +191,13 @@ export class Project_Scene extends Scene {
         if (dist < 2) {
             if (this.collided === false) {
                 this.cue_ball_color = "#ff7575";
-                this.ball_velocity = this.cue_velocity;
+                let collision_vector = vec3((x2 - x1)/dist, (y2 - y1)/dist, (z2 - z1)/dist);
+                let dot_product = collision_vector[0] * this.cue_velocity[0] + collision_vector[1] * this.cue_velocity[1] + collision_vector[2] * this.cue_velocity[2];
+                let cue_velocity_magnitude = Math.sqrt(this.cue_velocity[0]**2 + this.cue_velocity[1]**2  + this.cue_velocity[2]**2)
+                let angle_of_colision = dot_product/cue_velocity_magnitude;
+                console.log(cue_velocity_magnitude, " ", angle_of_colision)
+                this.ball_velocity = vec3(cue_velocity_magnitude*angle_of_colision*(x2 - x1)/dist, cue_velocity_magnitude*angle_of_colision*(y2 - y1)/dist, cue_velocity_magnitude*angle_of_colision*(z2 - z1)/dist);
+
                 this.collided = true;
             } //else: not repeat velocity transfer while still in hitbox
         } else {
