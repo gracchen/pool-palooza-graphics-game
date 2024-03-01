@@ -33,6 +33,11 @@ export class Project_Scene extends Scene {
 
         this.cue_ball_color = "#dfe6c1";
         this.ball_color = "#FFFFFF"
+        this.red_ball_position = vec3(-8, 2, 1);
+        this.green_ball_position = vec3(-8, -2, 1);
+
+        this.red_ball_color = "#FF0000";
+        this.green_ball_color = "#00FF00"; 
 
         this.cue_ball_start_time = 0;
         this.cue_ball_initial_x = 6;
@@ -40,6 +45,14 @@ export class Project_Scene extends Scene {
         this.cue_velocity = vec3(0,0,0);
 
         this.ball_velocity = vec3(0,0,0);
+
+        this.balls = [
+            { position: this.cue_ball_position, velocity: this.cue_velocity, color: this.cue_ball_color },
+            { position: this.ball_position, velocity: this.ball_velocity, color: this.ball_color },
+            { position: this.red_ball_position, velocity: vec3(0,0,0), color: this.red_ball_color },
+            { position: this.green_ball_position, velocity: vec3(0,0,0), color: this.green_ball_color }
+        ];
+        
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
     }
 
@@ -107,6 +120,9 @@ export class Project_Scene extends Scene {
         var t_p2 = model_transform.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(8, 0, 0));
         this.draw_ball(context, program_state, this.cue_ball_position, this.cue_ball_color);
         this.draw_ball(context, program_state, this.ball_position, this.ball_color);
+        this.draw_ball(context, program_state, this.red_ball_position, this.red_ball_color);
+        this.draw_ball(context, program_state, this.green_ball_position, this.green_ball_color);
+
         // this.draw_ball(context, program_state, vec3(0,0,1), this.ball_color);
         // this.draw_ball(context, program_state, vec3(10,-2,1), this.ball_color);
         // this.draw_ball(context, program_state, vec3(-10,-4,1), this.ball_color);
