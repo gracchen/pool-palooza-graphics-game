@@ -31,9 +31,9 @@ export class Project_Scene extends Scene {
         this.balls = [
             { position: vec3(6, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true }, // Cue ball
             { position: vec3(-6, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false }, // White ball
-            { position: vec3(-8, 2, 1), velocity: vec3(0, 0, 0), color: "#FF0000", isCueBall: false }, // Red ball
+            { position: vec3(-8, 1, 1), velocity: vec3(0, 0, 0), color: "#FF0000", isCueBall: false }, // Red ball
             { position: vec3(-8, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false },  // Green ball
-            { position: vec3(0, 0, 1), velocity: vec3(-5, 0, 0), color: "#F23FFF", isCueBall: false }, // Ball being shot leftward
+            { position: vec3(4, 0, 1), velocity: vec3(-20, 0, 0), color: "#F23FFF", isCueBall: false }, // Ball being shot leftward
         ];
         
         
@@ -41,18 +41,12 @@ export class Project_Scene extends Scene {
     }
 
     update(context, program_state) {
-        // Calculate the time delta (dt) since the last frame
-        const dt = program_state.animation_delta_time / 1000; // Convert to seconds
+        const dt = program_state.animation_delta_time / 1000;
     
-        // Update the positions and velocities of all balls
         this.update_balls(dt);
      
-        // Check for and handle any collisions
         this.collision_detected();
-    
-        // Automatically calls display to draw the scene with updated positions
-        // Note: Depending on your framework or how you've structured your animation loop,
-        // you may not need to explicitly call display here if it's already being called elsewhere.
+
         this.display(context, program_state);
     }
     
@@ -150,9 +144,6 @@ export class Project_Scene extends Scene {
                     // Directly manipulate the position of the cue ball based on mouse movement
                     cueBall.position = vec3(x, y, 1); // Update cue ball position
                     
-                    // Update the velocity of the cue ball based on mouse movement
-                    // This calculation assumes that 'dt' is the time difference between mousemove events, which might not be accurate.
-                    // You might need to calculate 'dt' differently or use a fixed value for a consistent experience.
                     cueBall.velocity = vec3((x - cueBall.position[0]) / dt, (y - cueBall.position[1]) / dt, 0);
                 }
             }
