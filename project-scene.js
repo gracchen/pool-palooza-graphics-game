@@ -30,14 +30,32 @@ export class Project_Scene extends Scene {
 
         this.balls = [
             { position: vec3(6, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true }, // Cue ball
-            { position: vec3(-6, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false },
+            { position: vec3(-6, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false }, // White ball
             { position: vec3(-8, 2, 1), velocity: vec3(0, 0, 0), color: "#FF0000", isCueBall: false }, // Red ball
-            { position: vec3(-8, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false }  // Green ball
+            { position: vec3(-8, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false },  // Green ball
+            { position: vec3(0, 0, 1), velocity: vec3(-5, 0, 0), color: "#F23FFF", isCueBall: false }, // Ball being shot leftward
         ];
         
         
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
     }
+
+    update(context, program_state) {
+        // Calculate the time delta (dt) since the last frame
+        const dt = program_state.animation_delta_time / 1000; // Convert to seconds
+    
+        // Update the positions and velocities of all balls
+        this.update_balls(dt);
+     
+        // Check for and handle any collisions
+        this.collision_detected();
+    
+        // Automatically calls display to draw the scene with updated positions
+        // Note: Depending on your framework or how you've structured your animation loop,
+        // you may not need to explicitly call display here if it's already being called elsewhere.
+        this.display(context, program_state);
+    }
+    
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
@@ -150,27 +168,20 @@ export class Project_Scene extends Scene {
         });
     }
     
+
     update_balls(dt) {
         this.balls.forEach(ball => {
-            // Skip the cue ball based on the isCueBall flag
-            if (!ball.isCueBall) {
-                // Update position based on velocity with ad-hoc compensation
-                ball.position[0] += 8000000 * dt * ball.velocity[0];
-                ball.position[1] += 12000000 * dt * ball.velocity[1];
-                // Assuming balls move only on the X and Y axes and ignoring Z-axis for simplicity
-
-                // Apply friction to slow down the ball
-                ball.velocity[0] -= 0.15 * ball.velocity[0];
-                ball.velocity[1] -= 0.15 * ball.velocity[1];
+            // Update position based on velocity
+            ball.position = ball.position.plus(ball.velocity.times(dt));
     
-                // Apply friction to slow down the ball
-                ball.velocity[0] = Math.sign(ball.velocity[0]) * Math.max(0, Math.abs(ball.velocity[0]) - 0.15 * Math.abs(ball.velocity[0]));
-                ball.velocity[1] = Math.sign(ball.velocity[1]) * Math.max(0, Math.abs(ball.velocity[1]) - 0.15 * Math.abs(ball.velocity[1]));
-                // This ensures that the ball's velocity reduces to zero but doesn't flip direction due to friction
-
-            }
+            // Apply friction (or some form of deceleration)
+            ball.velocity = ball.velocity.times(0.98); // Adjust the friction coefficient as needed
         });
+    
+        // Handle collisions
+        this.collision_detected();
     }
+    
 
     collision_detected() {
         let wallBounce = false;
