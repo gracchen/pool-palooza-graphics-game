@@ -33,7 +33,7 @@ export class Project_Scene extends Scene {
             { position: vec3(-6, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false }, // White ball
             { position: vec3(-8, 1, 1), velocity: vec3(0, 0, 0), color: "#FF0000", isCueBall: false }, // Red ball
             { position: vec3(-8, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false },  // Green ball
-            { position: vec3(4, 0, 1), velocity: vec3(-20, 0, 0), color: "#F23FFF", isCueBall: false }, // Ball being shot leftward
+            { position: vec3(4, 0, 1), velocity: vec3(0, 0, 0), color: "#F23FFF", isCueBall: false }, // Ball being shot leftward
         ];
         
         
@@ -210,12 +210,12 @@ export class Project_Scene extends Scene {
         this.balls.forEach((ball1, index1) => {
             // Ball-to-wall collisions
             if (Math.abs(ball1.position[0]) > (this.table_width - this.wall_thickness)) {
-                ball1.velocity[0] *= -1;
+                ball1.velocity[0] *= -0.8;
                 ball1.position[0] = Math.sign(ball1.position[0]) * (this.table_width- this.wall_thickness);
                 wallBounce = true;
             }
             if (Math.abs(ball1.position[1]) > (this.table_height - this.wall_thickness)) {
-                ball1.velocity[1] *= -1;
+                ball1.velocity[1] *= -0.8;
                 ball1.position[1] = Math.sign(ball1.position[1]) * (this.table_height - this.wall_thickness);
                 wallBounce = true;
             }
@@ -233,7 +233,7 @@ export class Project_Scene extends Scene {
                         if (velocityAlongNormal > 0) return;
                         
                         // Using simplified model for equal mass and perfectly elastic collision
-                        const impulse = velocityAlongNormal * -2;
+                        const impulse = velocityAlongNormal * -1;
                         ball1.velocity = ball1.velocity.plus(collisionNormal.times(impulse));
                         ball2.velocity = ball2.velocity.minus(collisionNormal.times(impulse));
     
