@@ -28,24 +28,6 @@ export class Project_Scene extends Scene {
 
         }
 
-        // this.cue_ball_position = vec3(6, 0, 1);
-        // this.ball_position = vec3(-6, 0, 1);
-
-        // this.cue_ball_color = "#dfe6c1";
-        // this.ball_color = "#FFFFFF"
-        // this.red_ball_position = vec3(-8, 2, 1);
-        // this.green_ball_position = vec3(-8, -2, 1);
-
-        // this.red_ball_color = "#FF0000";
-        // this.green_ball_color = "#00FF00"; 
-
-        // this.cue_ball_start_time = 0;
-        // this.cue_ball_initial_x = 6;
-        // this.cue_ball_initial_y = 0;
-        // this.cue_velocity = vec3(0,0,0);
-
-        // this.ball_velocity = vec3(0,0,0);
-
         this.balls = [
             { position: vec3(6, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true }, // Cue ball
             { position: vec3(-6, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false },
@@ -111,24 +93,16 @@ export class Project_Scene extends Scene {
 
         program_state.projection_transform = orthographic_proj;
 
-        // program_state.projection_transform = Mat4.perspective(
-        //     Math.PI / 4, context.width / context.height, .1, 1000);
 
         let model_transform = Mat4.identity();
 
         this.draw_light(context, program_state, model_transform, t);
 
         var t_p2 = model_transform.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(8, 0, 0));
-        // this.draw_ball(context, program_state, this.cue_ball_position, this.cue_ball_color);
-        // this.draw_ball(context, program_state, this.ball_position, this.ball_color);
-        // this.draw_ball(context, program_state, this.red_ball_position, this.red_ball_color);
-        // this.draw_ball(context, program_state, this.green_ball_position, this.green_ball_color);
         this.balls.forEach(ball => {
             this.draw_ball(context, program_state, ball.position, ball.color);
         });
-        // this.draw_ball(context, program_state, vec3(0,0,1), this.ball_color);
-        // this.draw_ball(context, program_state, vec3(10,-2,1), this.ball_color);
-        // this.draw_ball(context, program_state, vec3(-10,-4,1), this.ball_color);
+
         this.draw_table(context, program_state, model_transform, t);
         this.draw_wall(context, program_state, model_transform, t);
 
@@ -138,91 +112,20 @@ export class Project_Scene extends Scene {
 
     }
 
-    // update_balls(dt){
-    //     //ball
-    //     //console.log(this.cue_ball_position);
-    //     this.ball_position[0] += 8000000*dt*this.ball_velocity[0]; //ad-hoc compensation for glitchy manual calc velocity
-    //     this.ball_position[1] += 12000000*dt*this.ball_velocity[1]; //hopefully replace drag w/ with stabler shooting
-
-    //     //friction
-    //     this.ball_velocity[0] -= 0.15*this.ball_velocity[0];
-    //     this.ball_velocity[1] -= 0.15*this.ball_velocity[1];
-    // }
-
-
-    // setup_mouse_controls(canvas, dt) {
-    //     let dragging = false;
-    //     const rect = canvas.getBoundingClientRect(); // Get canvas position and size
-    
-    //     canvas.addEventListener('mousedown', (e) => {
-    //         dragging = true;
-    //     });
-
-    //     canvas.addEventListener('mousemove', (e) => {
-    //         // console.log((e.clientX / rect.width) - 0.5);
-    //         // console.log(rect.right);
-    //         if (dragging) {
-    //             // Convert mouse coordinates to canvas space
-
-    //             const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2; // Example conversion
-    //             const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2; // Example conversion
-
-    //             //console.log((y - this.cue_ball_position[1]));
-    //             //console.log("x:" + x.toFixed(3) + " pos:" + this.cue_ball_position[0].toFixed(3));
-    //             //console.log("y:" + y.toFixed(3) + " pos:" + this.cue_ball_position[1].toFixed(3));
-    //             this.cue_velocity = vec3((x - this.cue_ball_position[0])/dt, (y - this.cue_ball_position[1])/dt, 0);
-    //             this.cue_ball_position = vec3(x, y, 1); // Update cue ball position
-    //         }
-    //     });
-
-    //     const width = (rect.right - rect.left);
-    //     const height = (rect.bottom - rect.top);
-
-    //     //normalized screen space coords of mouse click
-    //     const mouse_position = (e, rect = canvas.getBoundingClientRect()) =>
-    //         vec(
-    //             (e.clientX - (rect.left + rect.right) / 2) * 2 / width,
-    //             (e.clientY - (rect.bottom + rect.top) / 2) * 2 / height
-    //         );
-
-    //     canvas.addEventListener('click', (e) => {
-    //         let mouse = mouse_position(e)
-    //         let mouse_screen_space = vec3(mouse[0], mouse[1], 0);
-    //     });
-
-    //     canvas.addEventListener('mouseup', () => {
-    //         dragging = false;
-    //         this.cue_velocity = vec3(0,0,0);
-    //     });
-    // }
-
-    update_balls(dt) {
-        this.balls.forEach(ball => {
-            // Update position based on velocity
-            ball.position = ball.position.plus(ball.velocity.times(dt));
-    
-            // Apply friction (or some form of deceleration)
-            ball.velocity = ball.velocity.times(0.85); // Adjust the friction coefficient as needed
-        });
-    
-        // Handle collisions
-        this.collision_detected();
-    }    
-    
     setup_mouse_controls(canvas, dt) {
         let dragging = false;
         const rect = canvas.getBoundingClientRect(); // Get canvas position and size
-    
+        
         canvas.addEventListener('mousedown', (e) => {
             dragging = true;
         });
-    
+        
         canvas.addEventListener('mousemove', (e) => {
             if (dragging) {
                 // Convert mouse coordinates to canvas space
                 const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2;
                 const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2;
-    
+                
                 // Find the cue ball in the balls array
                 const cueBall = this.balls.find(ball => ball.isCueBall);
                 if (cueBall) {
@@ -236,7 +139,7 @@ export class Project_Scene extends Scene {
                 }
             }
         });
-    
+        
         canvas.addEventListener('mouseup', () => {
             dragging = false;
             // Reset the velocity of the cue ball when the mouse is released
@@ -247,81 +150,44 @@ export class Project_Scene extends Scene {
         });
     }
     
+    update_balls(dt) {
+        this.balls.forEach(ball => {
+            // Skip the cue ball based on the isCueBall flag
+            if (!ball.isCueBall) {
+                // Update position based on velocity with ad-hoc compensation
+                ball.position[0] += 8000000 * dt * ball.velocity[0];
+                ball.position[1] += 12000000 * dt * ball.velocity[1];
+                // Assuming balls move only on the X and Y axes and ignoring Z-axis for simplicity
 
-    // collision_detected(time) {
-    //     let cueBall = this.balls.find(ball => ball.isCueBall);
-    //     let cueBallPosition = cueBall.position;
-    //     let cueBallVelocity = cueBall.velocity;
+                // Apply friction to slow down the ball
+                ball.velocity[0] -= 0.15 * ball.velocity[0];
+                ball.velocity[1] -= 0.15 * ball.velocity[1];
+    
+                // Apply friction to slow down the ball
+                ball.velocity[0] = Math.sign(ball.velocity[0]) * Math.max(0, Math.abs(ball.velocity[0]) - 0.15 * Math.abs(ball.velocity[0]));
+                ball.velocity[1] = Math.sign(ball.velocity[1]) * Math.max(0, Math.abs(ball.velocity[1]) - 0.15 * Math.abs(ball.velocity[1]));
+                // This ensures that the ball's velocity reduces to zero but doesn't flip direction due to friction
 
-    //     let collided = false;
-    //     let wallBounce = false;
+            }
+        });
+    }
 
-    //     this.balls.forEach(ball => {
-    //         if (ball !== cueBall) {
-    //             let ballPosition = ball.position;
-    //             let ballVelocity = ball.velocity;
-    //             let ogColor = ball.color;
-
-    //             let dist = Math.sqrt((ballPosition[0] - cueBallPosition[0]) ** 2 + (ballPosition[1] - cueBallPosition[1]) ** 2 + (ballPosition[2] - cueBallPosition[2]) ** 2);
-                
-    //             if (dist < 2) {
-    //                 if (!collided) {
-    //                     let collisionVector = vec3((ballPosition[0] - cueBallPosition[0]) / dist, (ballPosition[1] - cueBallPosition[1]) / dist, (ballPosition[2] - cueBallPosition[2]) / dist);
-    //                     let dotProduct = collisionVector[0] * cueBallVelocity[0] + collisionVector[1] * cueBallVelocity[1] + collisionVector[2] * cueBallVelocity[2];
-    //                     let cueVelocityMagnitude = Math.sqrt(cueBallVelocity[0] ** 2 + cueBallVelocity[1] ** 2 + cueBallVelocity[2] ** 2);
-    //                     let angleOfCollision = dotProduct / cueVelocityMagnitude;
-    //                     ball.velocity = vec3(cueVelocityMagnitude * angleOfCollision * (ballPosition[0] - cueBallPosition[0]) / dist, cueVelocityMagnitude * angleOfCollision * (ballPosition[1] - cueBallPosition[1]) / dist, cueVelocityMagnitude * angleOfCollision * (ballPosition[2] - cueBallPosition[2]) / dist);
-
-    //                     collided = true;
-    //                 }
-    //             } else {
-    //                 collided = false;
-    //             }
-
-    //             if (Math.abs(ballPosition[0]) > (this.table_width - this.wall_thickness)) {
-    //                 ball.position[0] = (this.table_width - this.wall_thickness) * ballPosition[0] / (Math.abs(ballPosition[0]));
-    //                 wallBounce = true;
-    //             }
-
-    //             if (Math.abs(ballPosition[1]) > (this.table_height - this.wall_thickness)) {
-    //                 ball.position[1] = (this.table_height - this.wall_thickness) * ballPosition[1] / (Math.abs(ballPosition[1]));
-    //                 wallBounce = true;
-    //             }
-
-    //             if (wallBounce) {
-    //                 ball.velocity = vec3(-1 * ball.velocity[0], -1 * ball.velocity[1], -1 * ball.velocity[2]);
-    //             }
-
-    //             if (collided || wallBounce) {
-    //                 ball.color = "#ff7575";
-    //             } else {
-    //                 ball.color = ogColor;
-    //             }
-    //         }
-    //     });
-
-    //     if (!collided && !wallBounce) {
-    //         cueBall.color = "#dfe6c1";
-    //     }
-
-    //     return collided || wallBounce;
-    // }
     collision_detected() {
         let wallBounce = false;
-    
+        
         this.balls.forEach((ball1, index1) => {
             // Ball-to-wall collisions
-            if (Math.abs(ball1.position[0]) > (this.table_width / 2 - this.wall_thickness)) {
+            if (Math.abs(ball1.position[0]) > (this.table_width - this.wall_thickness)) {
                 ball1.velocity[0] *= -1;
-                ball1.position[0] = Math.sign(ball1.position[0]) * (this.table_width / 2 - this.wall_thickness);
+                ball1.position[0] = Math.sign(ball1.position[0]) * (this.table_width- this.wall_thickness);
                 wallBounce = true;
             }
-            if (Math.abs(ball1.position[1]) > (this.table_height / 2 - this.wall_thickness)) {
+            if (Math.abs(ball1.position[1]) > (this.table_height - this.wall_thickness)) {
                 ball1.velocity[1] *= -1;
-                ball1.position[1] = Math.sign(ball1.position[1]) * (this.table_height / 2 - this.wall_thickness);
+                ball1.position[1] = Math.sign(ball1.position[1]) * (this.table_height - this.wall_thickness);
                 wallBounce = true;
             }
-    
+            
             // Ball-to-ball collisions
             this.balls.forEach((ball2, index2) => {
                 if (index1 !== index2) {
@@ -330,10 +196,10 @@ export class Project_Scene extends Scene {
                         const collisionNormal = ball1.position.minus(ball2.position).normalized();
                         const relativeVelocity = ball1.velocity.minus(ball2.velocity);
                         const velocityAlongNormal = relativeVelocity.dot(collisionNormal);
-    
+                        
                         // Skip if velocities are separating
                         if (velocityAlongNormal > 0) return;
-    
+                        
                         // Using simplified model for equal mass and perfectly elastic collision
                         const impulse = velocityAlongNormal * -2;
                         ball1.velocity = ball1.velocity.plus(collisionNormal.times(impulse));
@@ -350,8 +216,6 @@ export class Project_Scene extends Scene {
     
         return wallBounce;
     }
-    
-    
 
     draw_table(context, program_state, model_transform, t){
         let table_transform = model_transform.times(Mat4.scale(this.table_width, this.table_height, 1));
