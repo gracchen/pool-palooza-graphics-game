@@ -15,8 +15,12 @@ export class Project_Scene extends Scene {
             ball: new defs.Subdivision_Sphere(4),
             table: new defs.Square(),
             wall: new defs.Square(),
+            line: new defs.Square(),
         };
 
+
+        this.drag = false;
+        this.mouse_coords = vec3(0,0,1);
         // *** Materials
         this.materials = {
             ball: new Material(new defs.Phong_Shader(),
@@ -35,7 +39,7 @@ export class Project_Scene extends Scene {
             { position: vec3(-8, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false },  // Green ball
             { position: vec3(4, 0, 1), velocity: vec3(0, 0, 0), color: "#F23FFF", isCueBall: false }, // Ball being shot leftward
         ];
-        
+
         
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
 
@@ -120,7 +124,15 @@ export class Project_Scene extends Scene {
 
         this.draw_table(context, program_state, model_transform, t);
         this.draw_wall(context, program_state, model_transform, t);
-
+        if (this.drag) {
+            const cueBallPosition = this.balls.find(ball => ball.isCueBall).position;
+            const oppositeDirection = cueBallPosition.minus(this.mouse_coords);
+            const oppositeEnd = cueBallPosition.plus(oppositeDirection);
+            //clamp to avoid walls
+            oppositeEnd[0] = Math.max(-20, Math.min(20, oppositeEnd[0]));
+            oppositeEnd[1] = Math.max(-10, Math.min(10, oppositeEnd[1]));
+            this.draw_aim(context, program_state, cueBallPosition, oppositeEnd);
+        }
         if (this.attached !== undefined) {
             program_state.camera_inverse = this.attached().map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
         }
@@ -133,11 +145,12 @@ export class Project_Scene extends Scene {
         
         canvas.addEventListener('mousedown', (e) => {
             dragging = true;
-
+            this.drag = true;
             if (!this.initial_is_set) {
                 const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2;
                 const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2;
                 this.initial_mouse_pos = vec3(x, y, 1);
+                this.mouse_coords = this.initial_mouse_pos;
                 console.log(this.initial_mouse_pos);
                 this.initial_is_set = true;
                 this.shoot_processed = false;
@@ -149,7 +162,7 @@ export class Project_Scene extends Scene {
                 // Convert mouse coordinates to canvas space
                 const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2;
                 const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2;
-                
+                this.mouse_coords = vec3(x, y, 1);
                 // Find the cue ball in the balls array
                 const cueBall = this.balls.find(ball => ball.isCueBall);
                 if (cueBall) {
@@ -163,6 +176,7 @@ export class Project_Scene extends Scene {
         
         canvas.addEventListener('mouseup', (e) => {
             dragging = false;
+            this.drag = false;
             // Reset the velocity of the cue ball when the mouse is released
             const cueBall = this.balls.find(ball => ball.isCueBall);
             // if (cueBall) {
@@ -174,7 +188,7 @@ export class Project_Scene extends Scene {
                 const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2;
                 var final_mouse_pos = vec3(x, y, 1);
                 console.log(final_mouse_pos);
-
+                this.mouse_coords = final_mouse_pos;
                 var shoot_dir = (this.initial_mouse_pos.minus(final_mouse_pos)).times(3);
 
 
@@ -253,6 +267,33 @@ export class Project_Scene extends Scene {
         let table_transform = model_transform.times(Mat4.scale(this.table_width, this.table_height, 1));
         this.shapes.table.draw(context, program_state, table_transform, this.materials.table);
     }
+
+    draw_aim(context, program_state, start_point, end_point) {
+        if (start_point[0] < end_point[0]) { //mirror it
+            let temp = start_point;
+            start_point = end_point;
+            end_point = temp;
+        }
+
+        let direction = end_point.minus(start_point);
+        let length = direction.norm();
+        let midpt = start_point.plus(end_point).times(0.5);
+        direction = direction.normalized();
+
+        let a = vec3(0, 1, 0);
+        let b = direction;
+        let dot_product = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        let magnitude_a = a.norm(); // Calculate magnitude using norm()
+        let magnitude_b = b.norm(); // Calculate magnitude using norm()
+        let angle = Math.acos(dot_product / (magnitude_a * magnitude_b));
+
+        let line_transform = Mat4.translation(midpt[0], midpt[1], midpt[2])
+            .times(Mat4.rotation(angle, 0, 0, 1))
+            .times(Mat4.scale(0.05, length*0.5, 0.05));
+
+        this.shapes.line.draw(context, program_state, line_transform, this.materials.table.override({ color: hex_color("#000000") }));
+    }
+
 
     draw_wall(context, program_state, model_transform, t){
         let wall_transform = model_transform.times(Mat4.translation(0, 0, -0.1)).times(Mat4.scale(21.1, 10.95, 0));
