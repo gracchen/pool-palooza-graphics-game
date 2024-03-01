@@ -38,6 +38,9 @@ export class Project_Scene extends Scene {
         
         
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
+
+        this.initial_is_set = false;
+        this.shoot_processed = false;
     }
 
     update(context, program_state) {
@@ -130,6 +133,15 @@ export class Project_Scene extends Scene {
         
         canvas.addEventListener('mousedown', (e) => {
             dragging = true;
+
+            if (!this.initial_is_set) {
+                const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2;
+                const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2;
+                this.initial_mouse_pos = vec3(x, y, 1);
+                console.log(this.initial_mouse_pos);
+                this.initial_is_set = true;
+                this.shoot_processed = false;
+            }
         });
         
         canvas.addEventListener('mousemove', (e) => {
@@ -142,20 +154,38 @@ export class Project_Scene extends Scene {
                 const cueBall = this.balls.find(ball => ball.isCueBall);
                 if (cueBall) {
                     // Directly manipulate the position of the cue ball based on mouse movement
-                    cueBall.position = vec3(x, y, 1); // Update cue ball position
+                    // cueBall.position = vec3(x, y, 1); // Update cue ball position
                     
-                    cueBall.velocity = vec3((x - cueBall.position[0]) / dt, (y - cueBall.position[1]) / dt, 0);
+                    // cueBall.velocity = vec3((x - cueBall.position[0]) / dt, (y - cueBall.position[1]) / dt, 0);
                 }
             }
         });
         
-        canvas.addEventListener('mouseup', () => {
+        canvas.addEventListener('mouseup', (e) => {
             dragging = false;
             // Reset the velocity of the cue ball when the mouse is released
             const cueBall = this.balls.find(ball => ball.isCueBall);
-            if (cueBall) {
-                cueBall.velocity = vec3(0, 0, 0);
+            // if (cueBall) {
+            //     cueBall.velocity = vec3(0, 0, 0);
+            // }
+
+            if (!this.shoot_processed) {
+                const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2;
+                const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2;
+                var final_mouse_pos = vec3(x, y, 1);
+                console.log(final_mouse_pos);
+
+                var shoot_dir = (this.initial_mouse_pos.minus(final_mouse_pos)).times(3);
+
+
+                if (cueBall) {
+                    cueBall.velocity = cueBall.velocity.plus(shoot_dir);
+                }
+
+                this.initial_is_set = false;
+                this.shoot_processed = true;
             }
+
         });
     }
     
