@@ -47,11 +47,12 @@ export class Project_Scene extends Scene {
         this.ball_velocity = vec3(0,0,0);
 
         this.balls = [
-            { position: this.cue_ball_position, velocity: this.cue_velocity, color: this.cue_ball_color },
-            { position: this.ball_position, velocity: this.ball_velocity, color: this.ball_color },
-            { position: this.red_ball_position, velocity: vec3(0,0,0), color: this.red_ball_color },
-            { position: this.green_ball_position, velocity: vec3(0,0,0), color: this.green_ball_color }
+            { position: vec3(6, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true }, // Cue ball
+            { position: vec3(-6, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false },
+            { position: vec3(-8, 2, 1), velocity: vec3(0, 0, 0), color: "#FF0000", isCueBall: false }, // Red ball
+            { position: vec3(-8, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false }  // Green ball
         ];
+        
         
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
     }
@@ -118,11 +119,13 @@ export class Project_Scene extends Scene {
         this.draw_light(context, program_state, model_transform, t);
 
         var t_p2 = model_transform.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(8, 0, 0));
-        this.draw_ball(context, program_state, this.cue_ball_position, this.cue_ball_color);
-        this.draw_ball(context, program_state, this.ball_position, this.ball_color);
-        this.draw_ball(context, program_state, this.red_ball_position, this.red_ball_color);
-        this.draw_ball(context, program_state, this.green_ball_position, this.green_ball_color);
-
+        // this.draw_ball(context, program_state, this.cue_ball_position, this.cue_ball_color);
+        // this.draw_ball(context, program_state, this.ball_position, this.ball_color);
+        // this.draw_ball(context, program_state, this.red_ball_position, this.red_ball_color);
+        // this.draw_ball(context, program_state, this.green_ball_position, this.green_ball_color);
+        this.balls.forEach(ball => {
+            this.draw_ball(context, program_state, ball.position, ball.color);
+        });
         // this.draw_ball(context, program_state, vec3(0,0,1), this.ball_color);
         // this.draw_ball(context, program_state, vec3(10,-2,1), this.ball_color);
         // this.draw_ball(context, program_state, vec3(-10,-4,1), this.ball_color);
@@ -146,6 +149,51 @@ export class Project_Scene extends Scene {
         this.ball_velocity[1] -= 0.15*this.ball_velocity[1];
     }
 
+    // setup_mouse_controls(canvas, dt) {
+    //     let dragging = false;
+    //     const rect = canvas.getBoundingClientRect(); // Get canvas position and size
+    
+    //     canvas.addEventListener('mousedown', (e) => {
+    //         dragging = true;
+    //     });
+
+    //     canvas.addEventListener('mousemove', (e) => {
+    //         // console.log((e.clientX / rect.width) - 0.5);
+    //         // console.log(rect.right);
+    //         if (dragging) {
+    //             // Convert mouse coordinates to canvas space
+
+    //             const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2; // Example conversion
+    //             const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2; // Example conversion
+
+    //             //console.log((y - this.cue_ball_position[1]));
+    //             //console.log("x:" + x.toFixed(3) + " pos:" + this.cue_ball_position[0].toFixed(3));
+    //             //console.log("y:" + y.toFixed(3) + " pos:" + this.cue_ball_position[1].toFixed(3));
+    //             this.cue_velocity = vec3((x - this.cue_ball_position[0])/dt, (y - this.cue_ball_position[1])/dt, 0);
+    //             this.cue_ball_position = vec3(x, y, 1); // Update cue ball position
+    //         }
+    //     });
+
+    //     const width = (rect.right - rect.left);
+    //     const height = (rect.bottom - rect.top);
+
+    //     //normalized screen space coords of mouse click
+    //     const mouse_position = (e, rect = canvas.getBoundingClientRect()) =>
+    //         vec(
+    //             (e.clientX - (rect.left + rect.right) / 2) * 2 / width,
+    //             (e.clientY - (rect.bottom + rect.top) / 2) * 2 / height
+    //         );
+
+    //     canvas.addEventListener('click', (e) => {
+    //         let mouse = mouse_position(e)
+    //         let mouse_screen_space = vec3(mouse[0], mouse[1], 0);
+    //     });
+
+    //     canvas.addEventListener('mouseup', () => {
+    //         dragging = false;
+    //         this.cue_velocity = vec3(0,0,0);
+    //     });
+    // }
     setup_mouse_controls(canvas, dt) {
         let dragging = false;
         const rect = canvas.getBoundingClientRect(); // Get canvas position and size
@@ -153,44 +201,37 @@ export class Project_Scene extends Scene {
         canvas.addEventListener('mousedown', (e) => {
             dragging = true;
         });
-
+    
         canvas.addEventListener('mousemove', (e) => {
-            // console.log((e.clientX / rect.width) - 0.5);
-            // console.log(rect.right);
             if (dragging) {
                 // Convert mouse coordinates to canvas space
-
-                const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2; // Example conversion
-                const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2; // Example conversion
-
-                //console.log((y - this.cue_ball_position[1]));
-                //console.log("x:" + x.toFixed(3) + " pos:" + this.cue_ball_position[0].toFixed(3));
-                //console.log("y:" + y.toFixed(3) + " pos:" + this.cue_ball_position[1].toFixed(3));
-                this.cue_velocity = vec3((x - this.cue_ball_position[0])/dt, (y - this.cue_ball_position[1])/dt, 0);
-                this.cue_ball_position = vec3(x, y, 1); // Update cue ball position
+                const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2;
+                const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2;
+    
+                // Find the cue ball in the balls array
+                const cueBall = this.balls.find(ball => ball.isCueBall);
+                if (cueBall) {
+                    // Directly manipulate the position of the cue ball based on mouse movement
+                    cueBall.position = vec3(x, y, 1); // Update cue ball position
+                    
+                    // Update the velocity of the cue ball based on mouse movement
+                    // This calculation assumes that 'dt' is the time difference between mousemove events, which might not be accurate.
+                    // You might need to calculate 'dt' differently or use a fixed value for a consistent experience.
+                    cueBall.velocity = vec3((x - cueBall.position[0]) / dt, (y - cueBall.position[1]) / dt, 0);
+                }
             }
         });
-
-        const width = (rect.right - rect.left);
-        const height = (rect.bottom - rect.top);
-
-        //normalized screen space coords of mouse click
-        const mouse_position = (e, rect = canvas.getBoundingClientRect()) =>
-            vec(
-                (e.clientX - (rect.left + rect.right) / 2) * 2 / width,
-                (e.clientY - (rect.bottom + rect.top) / 2) * 2 / height
-            );
-
-        canvas.addEventListener('click', (e) => {
-            let mouse = mouse_position(e)
-            let mouse_screen_space = vec3(mouse[0], mouse[1], 0);
-        });
-
+    
         canvas.addEventListener('mouseup', () => {
             dragging = false;
-            this.cue_velocity = vec3(0,0,0);
+            // Reset the velocity of the cue ball when the mouse is released
+            const cueBall = this.balls.find(ball => ball.isCueBall);
+            if (cueBall) {
+                cueBall.velocity = vec3(0, 0, 0);
+            }
         });
     }
+    
 
     collision_detected(time) { //only between the two balls for now, turns red.
         let x1 = this.cue_ball_position[0]
