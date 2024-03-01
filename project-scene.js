@@ -33,12 +33,19 @@ export class Project_Scene extends Scene {
         }
 
         this.balls = [
-            { position: vec3(6, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true }, // Cue ball
-            { position: vec3(-6, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false }, // White ball
-            { position: vec3(-8, 1, 1), velocity: vec3(0, 0, 0), color: "#FF0000", isCueBall: false }, // Red ball
-            { position: vec3(-8, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false },  // Green ball
-            { position: vec3(4, 0, 1), velocity: vec3(0, 0, 0), color: "#F23FFF", isCueBall: false }, // Ball being shot leftward
+            { position: vec3(8, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true }, // Cue ball
+            { position: vec3(-8.4, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false }, // white ball
+            { position: vec3(-10.2, 1, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false }, // white ball
+            { position: vec3(-10.2, -1, 1), velocity: vec3(0, 0, 0), color: "#GF03FFF", isCueBall: false }, // white ball
+            { position: vec3(-12, 2, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false }, // Orange ball (top of triangle)
+            { position: vec3(-12, 0, 1), velocity: vec3(0, 0, 0), color: "#042F12", isCueBall: false }, // Green ball
+            { position: vec3(-12, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false }, // Green ball
+            { position: vec3(-13.8, -3, 1), velocity: vec3(0, 0, 0), color: "#F23FFF", isCueBall: false }, // Pink ball
+            { position: vec3(-13.8, -1, 1), velocity: vec3(0, 0, 0), color: "#0000FF", isCueBall: false }, // Blue ball
+            { position: vec3(-13.8, 1, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false }, // Orange ball
+            { position: vec3(-13.8, 3, 1), velocity: vec3(0, 0, 0), color: "#FFFF00", isCueBall: false }, // Yellow ball
         ];
+
 
         
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
