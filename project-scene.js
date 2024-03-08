@@ -52,7 +52,33 @@ export class Project_Scene extends Scene {
 
         this.initial_is_set = false;
         this.shoot_processed = false;
+
+        // audio
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.collisionSoundBuffer = null;
+        this.loadSound('./assets/ballCollision.mp3');
+        // TODO: POCKET SOUND / victory sound / background music
     }
+
+    async loadSound(url) {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        this.audioContext.decodeAudioData(arrayBuffer, (buffer) => {
+            this.collisionSoundBuffer = buffer;
+        }, (e) => console.error("Error with decoding audio data" + e.err));
+    }
+
+    playCollisionSound() {
+        if (this.collisionSoundBuffer) {
+            const source = this.audioContext.createBufferSource();
+            source.buffer = this.collisionSoundBuffer;
+            source.connect(this.audioContext.destination);
+            source.start(0);
+        } else {
+            console.log("Sound buffer is not loaded");
+        }
+    }
+
 
     update(context, program_state) {
         const dt = program_state.animation_delta_time / 1000;
@@ -239,6 +265,7 @@ export class Project_Scene extends Scene {
                 if (index1 !== index2) {
                     const distance = ball1.position.minus(ball2.position).norm();
                     if (distance < 2) { // Assuming each ball has a radius of 1
+                        this.playCollisionSound();
                         const collisionNormal = ball1.position.minus(ball2.position).normalized();
                         const relativeVelocity = ball1.velocity.minus(ball2.velocity);
                         const velocityAlongNormal = relativeVelocity.dot(collisionNormal);
