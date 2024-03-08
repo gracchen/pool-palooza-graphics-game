@@ -158,7 +158,7 @@ export class Project_Scene extends Scene {
         this.draw_wall(context, program_state, model_transform, t);
         if (this.drag) {
             const cueBallPosition = this.balls.find(ball => ball.isCueBall).position;
-            const oppositeDirection = cueBallPosition.minus(this.mouse_coords);
+            const oppositeDirection = this.initial_mouse_pos.minus(this.mouse_coords);
             const oppositeEnd = cueBallPosition.plus(oppositeDirection);
             //clamp to avoid walls
             oppositeEnd[0] = Math.max(-20, Math.min(20, oppositeEnd[0]));
