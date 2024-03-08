@@ -55,27 +55,33 @@ export class Project_Scene extends Scene {
 
         // audio
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.collisionSoundBuffer = null;
-        this.loadSound('./assets/ballCollision.mp3');
-        // TODO: POCKET SOUND / victory sound / background music
+        this.soundBuffers = {};
+        this.loadSound('ballCollision', './assets/ballCollision.mp3');
+        this.loadSound('cueHit', './assets/cueHit.mp3');
+        this.loadSound('background', './assets/background.mp3');
+        this.loadSound('score', './assets/score.mp3');
+        this.loadSound('victory', './assets/victory.mp3');
+        this.loadSound('defeat', './assets/defeat.mp3');
+        // TODO: pocket, victory, defeat sounds when logic is implemented
     }
 
-    async loadSound(url) {
+    async loadSound(key, url) {
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
         this.audioContext.decodeAudioData(arrayBuffer, (buffer) => {
-            this.collisionSoundBuffer = buffer;
-        }, (e) => console.error("Error with decoding audio data" + e.err));
+            this.soundBuffers[key] = buffer; // Store buffer with its key
+        }, (e) => console.error("Error with decoding audio data: ", e.err));
     }
 
-    playCollisionSound() {
-        if (this.collisionSoundBuffer) {
+    playSound(key) {
+        const soundBuffer = this.soundBuffers[key];
+        if (soundBuffer) {
             const source = this.audioContext.createBufferSource();
-            source.buffer = this.collisionSoundBuffer;
+            source.buffer = soundBuffer;
             source.connect(this.audioContext.destination);
             source.start(0);
         } else {
-            console.log("Sound buffer is not loaded");
+            console.log("Sound buffer for '" + key + "' is not loaded");
         }
     }
 
@@ -201,6 +207,8 @@ export class Project_Scene extends Scene {
         });
         
         canvas.addEventListener('mouseup', (e) => {
+            // this.playSound('cueHit');
+            console.log("mouse up");
             dragging = false;
             this.drag = false;
             // Reset the velocity of the cue ball when the mouse is released
@@ -219,6 +227,7 @@ export class Project_Scene extends Scene {
 
 
                 if (cueBall) {
+                    this.playSound('cueHit');
                     cueBall.velocity = cueBall.velocity.plus(shoot_dir);
                 }
 
@@ -265,7 +274,7 @@ export class Project_Scene extends Scene {
                 if (index1 !== index2) {
                     const distance = ball1.position.minus(ball2.position).norm();
                     if (distance < 2) { // Assuming each ball has a radius of 1
-                        this.playCollisionSound();
+                        this.playSound('ballCollision');
                         const collisionNormal = ball1.position.minus(ball2.position).normalized();
                         const relativeVelocity = ball1.velocity.minus(ball2.velocity);
                         const velocityAlongNormal = relativeVelocity.dot(collisionNormal);
