@@ -106,6 +106,19 @@ export class Project_Scene extends Scene {
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
+
+        var cue_ball = this.balls.find(ball => ball.isCueBall)
+        var cue_vel = cue_ball.velocity;
+        var cue_is_moving = Math.sqrt(cue_vel.dot(cue_vel)) - 1 > 0.02;
+
+        if (cue_is_moving) {
+            this.initial_camera_location = Mat4.look_at(cue_ball.position.minus(this.initial_shoot_dir.normalized().times(4)).plus(vec3(0,0,2)), cue_ball.position, vec3(0, 0, 1));
+        }
+        else {
+            this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
+
+        }
+
         if (!context.scratchpad.controls) {
             // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
@@ -126,24 +139,29 @@ export class Project_Scene extends Scene {
         this.wall_thickness = 1;
         this.collided = false;
 
-        let m = Mat4.orthographic(-1.0, 1.0, -1.0, 1.0, 0, 100);
+        if (cue_is_moving) {
+            program_state.projection_transform = Mat4.perspective(
+                Math.PI / 4, context.width / context.height, .1, 100);
+        }
+        else {
+            let m = Mat4.orthographic(-1.0, 1.0, -1.0, 1.0, 0, 100);
 
-        let plane_size = 23;
-        let ratio  = context.width / context.height;
-        let right  = plane_size;
-        let left   = -plane_size;
-        let top    = plane_size / ratio;
-        let bottom = -plane_size / ratio;
-        let near   = 1;
-        let far    = 100;
+            let plane_size = 23;
+            let ratio = context.width / context.height;
+            let right = plane_size;
+            let left = -plane_size;
+            let top = plane_size / ratio;
+            let bottom = -plane_size / ratio;
+            let near = 1;
+            let far = 100;
 
-        let A = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near));
-        let B = Mat4.translation(-left - right, -top - bottom, -near - far);
-        let C = Mat4.scale(2, 2, -2);
-        let orthographic_proj = A.times(B).times(C);
+            let A = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near));
+            let B = Mat4.translation(-left - right, -top - bottom, -near - far);
+            let C = Mat4.scale(2, 2, -2);
+            let orthographic_proj = A.times(B).times(C);
 
-        program_state.projection_transform = orthographic_proj;
-
+            program_state.projection_transform = orthographic_proj;
+        }
 
         let model_transform = Mat4.identity();
 
@@ -159,10 +177,24 @@ export class Project_Scene extends Scene {
         if (this.drag) {
             const cueBallPosition = this.balls.find(ball => ball.isCueBall).position;
             const oppositeDirection = this.initial_mouse_pos.minus(this.mouse_coords);
-            const oppositeEnd = cueBallPosition.plus(oppositeDirection);
+            var oppositeEnd = cueBallPosition.plus(oppositeDirection);
+
             //clamp to avoid walls
-            oppositeEnd[0] = Math.max(-20, Math.min(20, oppositeEnd[0]));
-            oppositeEnd[1] = Math.max(-10, Math.min(10, oppositeEnd[1]));
+            if (oppositeEnd[0] > 20) {
+                var scale_to_wall = (20 - cueBallPosition[0]) / oppositeDirection[0];
+                oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
+            } else if (oppositeEnd[0] < -20) {
+                var scale_to_wall = (-20 - cueBallPosition[0]) / oppositeDirection[0];
+                oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
+            }
+            if (oppositeEnd[1] > 10) {
+                var scale_to_wall = (10 - cueBallPosition[1]) / oppositeDirection[1];
+                oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
+            } else if (oppositeEnd[1] < -10) {
+                var scale_to_wall = (-10 - cueBallPosition[1]) / oppositeDirection[1];
+                oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
+            }
+
             this.draw_aim(context, program_state, cueBallPosition, oppositeEnd);
         }
         if (this.attached !== undefined) {
@@ -224,7 +256,7 @@ export class Project_Scene extends Scene {
                 console.log(final_mouse_pos);
                 this.mouse_coords = final_mouse_pos;
                 var shoot_dir = (this.initial_mouse_pos.minus(final_mouse_pos)).times(3);
-
+                this.initial_shoot_dir = shoot_dir;
 
                 if (cueBall) {
                     this.playSound('cueHit');
@@ -327,7 +359,7 @@ export class Project_Scene extends Scene {
             .times(Mat4.rotation(angle, 0, 0, 1))
             .times(Mat4.scale(0.05, length*0.5, 0.05));
 
-        this.shapes.line.draw(context, program_state, line_transform, this.materials.table.override({ color: hex_color("#000000") }));
+        this.shapes.line.draw(context, program_state, line_transform, this.materials.table.override({ color: hex_color("#FFFFFF") }));
     }
 
 
