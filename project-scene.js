@@ -16,6 +16,7 @@ export class Project_Scene extends Scene {
             table: new defs.Square(),
             wall: new defs.Square(),
             line: new defs.Square(),
+            wall_3d: new defs.Cube(),
         };
 
 
@@ -366,6 +367,11 @@ export class Project_Scene extends Scene {
     draw_wall(context, program_state, model_transform, t){
         let wall_transform = model_transform.times(Mat4.translation(0, 0, -0.1)).times(Mat4.scale(21.1, 10.95, 0));
         this.shapes.wall.draw(context, program_state, wall_transform, this.materials.wall);
+
+        this.shapes.wall_3d.draw(context, program_state, model_transform.times(Mat4.scale(0.5, 10, 1.5)).times(Mat4.translation(41, 0, -0.1)), this.materials.wall);
+        this.shapes.wall_3d.draw(context, program_state, model_transform.times(Mat4.scale(0.5, 10, 1.5)).times(Mat4.translation(-41, 0, -0.1)), this.materials.wall);
+        this.shapes.wall_3d.draw(context, program_state, model_transform.times(Mat4.scale(21.1, 0.5, 1.5)).times(Mat4.translation(0, 21, -0.1)), this.materials.wall);
+        this.shapes.wall_3d.draw(context, program_state, model_transform.times(Mat4.scale(21.1, 0.5, 1.5)).times(Mat4.translation(0, -21, -0.1)), this.materials.wall);
     }
 
     draw_light(context, program_state, model_transform, t) {
