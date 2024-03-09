@@ -16,6 +16,7 @@ export class Project_Scene extends Scene {
             table: new defs.Square(),
             wall: new defs.Square(),
             line: new defs.Square(),
+            pocket: new defs.Rounded_Capped_Cylinder(40, 40, [[0, 40], [0, 40]]),
         };
 
 
@@ -29,7 +30,8 @@ export class Project_Scene extends Scene {
             { ambient: 1, color: hex_color("#4F7942") }),
             wall: new Material(new defs.Phong_Shader(),
                 { ambient: 1, color: hex_color("#732b11") }),
-
+            pocket: new Material(new defs.Phong_Shader(),
+                {ambient: 1, color: hex_color("#000000")})
         }
 
         this.balls = [
@@ -45,6 +47,13 @@ export class Project_Scene extends Scene {
             { position: vec3(-13.8, 1, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false }, 
             { position: vec3(-13.8, 3, 1), velocity: vec3(0, 0, 0), color: "#FFFF00", isCueBall: false }, 
         ];
+
+        this.pockets = [
+            { position: vec3(-19.7, -9.7, 1)},
+            { position: vec3(-19.7, 9.7, 1)},
+            { position: vec3(19.7, 9.7, 1)},
+            { position: vec3(19.7, -9.7, 1)},
+]
 
 
         
@@ -95,7 +104,6 @@ export class Project_Scene extends Scene {
 
         this.display(context, program_state);
     }
-    
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
@@ -156,6 +164,7 @@ export class Project_Scene extends Scene {
 
         this.draw_table(context, program_state, model_transform, t);
         this.draw_wall(context, program_state, model_transform, t);
+        this.draw_pockets(context, program_state);
         if (this.drag) {
             const cueBallPosition = this.balls.find(ball => ball.isCueBall).position;
             const oppositeDirection = cueBallPosition.minus(this.mouse_coords);
@@ -257,6 +266,14 @@ export class Project_Scene extends Scene {
         let wallBounce = false;
         
         this.balls.forEach((ball1, index1) => {
+
+            // Ball-to-pocket collisions
+            this.pockets.forEach(pocket =>{
+                const distance = ball1.position.minus(pocket.position).norm();
+                if (distance < 1.5) {
+                    this.balls.splice(index1, 1)
+                }
+            })
             // Ball-to-wall collisions
             if (Math.abs(ball1.position[0]) > (this.table_width - this.wall_thickness)) {
                 ball1.velocity[0] *= -0.8;
@@ -303,7 +320,12 @@ export class Project_Scene extends Scene {
         let table_transform = model_transform.times(Mat4.scale(this.table_width, this.table_height, 1));
         this.shapes.table.draw(context, program_state, table_transform, this.materials.table);
     }
-
+    draw_pockets(context, program_state) {
+        this.pockets.forEach(pocket => {
+            let pocket_transform = Mat4.translation(...pocket.position)
+            this.shapes.pocket.draw(context, program_state, pocket_transform, this.materials.pocket)
+        });
+    }
     draw_aim(context, program_state, start_point, end_point) {
         if (start_point[0] < end_point[0]) { //mirror it
             let temp = start_point;
