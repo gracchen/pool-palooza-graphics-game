@@ -313,9 +313,14 @@ export class Project_Scene extends Scene {
 
                     if (ball1.color === "#000000") {  // 8 ball logic
                         if (this.balls.filter(b => b.isActive && !b.isCueBall).length > 1) {
-                            console.log("game end");
+                            console.log("game end"); // TODO: game end logic
                         }
                     }
+
+                    if(ball1.isCueBall) {
+                        console.log("cue ball in pocket"); //TODO: game end logic
+                    }
+
                     ball1.isActive = false; 
                 }
             })
