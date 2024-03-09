@@ -36,16 +36,16 @@ export class Project_Scene extends Scene {
 
         this.balls = [
             { position: vec3(8, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true, isActive: true }, // Cue ball
-            { position: vec3(-8.4, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false, isActive: true }, 
-            { position: vec3(-10.2, 1, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false, isActive: true }, 
-            { position: vec3(-10.2, -1, 1), velocity: vec3(0, 0, 0), color: "#GF03FFF", isCueBall: false, isActive: true }, 
-            { position: vec3(-12, 2, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false, isActive: true }, 
-            { position: vec3(-12, 0, 1), velocity: vec3(0, 0, 0), color: "#042F12", isCueBall: false, isActive: true }, 
-            { position: vec3(-12, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false, isActive: true }, 
-            { position: vec3(-13.8, -3, 1), velocity: vec3(0, 0, 0), color: "#F23FFF", isCueBall: false, isActive: true },
-            { position: vec3(-13.8, -1, 1), velocity: vec3(0, 0, 0), color: "#0000FF", isCueBall: false, isActive: true },
-            { position: vec3(-13.8, 1, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false, isActive: true }, 
-            { position: vec3(-13.8, 3, 1), velocity: vec3(0, 0, 0), color: "#FFFF00", isCueBall: false, isActive: true }, 
+            { position: vec3(-8.4, 0, 1), velocity: vec3(0, 0, 0), color: "#FF0000", isCueBall: false, isActive: true }, // Red
+            { position: vec3(-10.2, 1, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false, isActive: true }, // Orange
+            { position: vec3(-10.2, -1, 1), velocity: vec3(0, 0, 0), color: "#FFFF00", isCueBall: false, isActive: true }, // Yellow
+            { position: vec3(-12, 2, 1), velocity: vec3(0, 0, 0), color: "#008000", isCueBall: false, isActive: true }, // Green
+            { position: vec3(-12, 0, 1), velocity: vec3(0, 0, 0), color: "#000000", isCueBall: false, isActive: true }, // Black
+            { position: vec3(-12, -2, 1), velocity: vec3(0, 0, 0), color: "#800080", isCueBall: false, isActive: true }, // Purple
+            { position: vec3(-13.8, -3, 1), velocity: vec3(0, 0, 0), color: "#0000FF", isCueBall: false, isActive: true }, // Blue
+            { position: vec3(-13.8, -1, 1), velocity: vec3(0, 0, 0), color: "#FFC0CB", isCueBall: false, isActive: true }, // Pink
+            { position: vec3(-13.8, 1, 1), velocity: vec3(0, 0, 0), color: "#8B4513", isCueBall: false, isActive: true }, // Brown
+            { position: vec3(-13.8, 3, 1), velocity: vec3(0, 0, 0), color: "#808080", isCueBall: false, isActive: true }, // Gray
         ];
 
         this.pockets = [
