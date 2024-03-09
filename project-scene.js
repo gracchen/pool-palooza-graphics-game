@@ -306,7 +306,11 @@ export class Project_Scene extends Scene {
             // Ball-to-pocket collisions
             this.pockets.forEach(pocket =>{
                 const distance = ball1.position.minus(pocket.position).norm();
-                if (distance < 2) {
+                if (distance < 2 && ball1.isActive) {
+                    if (ball1.color !== "#000000" && !ball1.isCueBall) {
+                        this.playSound('score');
+                    }
+
                     if (ball1.color === "#000000") {  // 8 ball logic
                         if (this.balls.filter(b => b.isActive && !b.isCueBall).length > 1) {
                             console.log("game end");
@@ -329,7 +333,7 @@ export class Project_Scene extends Scene {
             
             // Ball-to-ball collisions
             this.balls.forEach((ball2, index2) => {
-                if (index1 !== index2) {
+                if (index1 !== index2 && ball2.isActive && ball1.isActive) {
                     const distance = ball1.position.minus(ball2.position).norm();
                     if (distance < 2) { // Assuming each ball has a radius of 1
                         this.playSound('ballCollision');
