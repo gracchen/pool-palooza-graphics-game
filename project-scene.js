@@ -50,12 +50,12 @@ export class Project_Scene extends Scene {
         ];
 
         this.pockets = [
-            { position: vec3(-20, -10, 0.01)},
-            { position: vec3(20, -10, 0.01)},
+            { position: vec3(-19.5, -9.5, 0.01)},
+            { position: vec3(19.5, -9.5, 0.01)},
             { position: vec3(0, -10, 0.01)},
             { position: vec3(0, 10, 0.01)},
-            { position: vec3(20, 10, 0.01)},
-            { position: vec3(-20, 10, 0.01)},
+            { position: vec3(19.5, 9.5, 0.01)},
+            { position: vec3(-19.5, 9.5, 0.01)},
 ]
 
         
