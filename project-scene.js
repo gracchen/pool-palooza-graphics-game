@@ -36,26 +36,26 @@ export class Project_Scene extends Scene {
         }
 
         this.balls = [
-            { position: vec3(8, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true }, // Cue ball
-            { position: vec3(-8.4, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false }, 
-            { position: vec3(-10.2, 1, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false }, 
-            { position: vec3(-10.2, -1, 1), velocity: vec3(0, 0, 0), color: "#GF03FFF", isCueBall: false }, 
-            { position: vec3(-12, 2, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false }, 
-            { position: vec3(-12, 0, 1), velocity: vec3(0, 0, 0), color: "#042F12", isCueBall: false }, 
-            { position: vec3(-12, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false }, 
-            { position: vec3(-13.8, -3, 1), velocity: vec3(0, 0, 0), color: "#F23FFF", isCueBall: false },
-            { position: vec3(-13.8, -1, 1), velocity: vec3(0, 0, 0), color: "#0000FF", isCueBall: false },
-            { position: vec3(-13.8, 1, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false }, 
-            { position: vec3(-13.8, 3, 1), velocity: vec3(0, 0, 0), color: "#FFFF00", isCueBall: false }, 
+            { position: vec3(8, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true, isActive: true }, // Cue ball
+            { position: vec3(-8.4, 0, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false, isActive: true }, 
+            { position: vec3(-10.2, 1, 1), velocity: vec3(0, 0, 0), color: "#FFFFFF", isCueBall: false, isActive: true }, 
+            { position: vec3(-10.2, -1, 1), velocity: vec3(0, 0, 0), color: "#GF03FFF", isCueBall: false, isActive: true }, 
+            { position: vec3(-12, 2, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false, isActive: true }, 
+            { position: vec3(-12, 0, 1), velocity: vec3(0, 0, 0), color: "#042F12", isCueBall: false, isActive: true }, 
+            { position: vec3(-12, -2, 1), velocity: vec3(0, 0, 0), color: "#00FF00", isCueBall: false, isActive: true }, 
+            { position: vec3(-13.8, -3, 1), velocity: vec3(0, 0, 0), color: "#F23FFF", isCueBall: false, isActive: true },
+            { position: vec3(-13.8, -1, 1), velocity: vec3(0, 0, 0), color: "#0000FF", isCueBall: false, isActive: true },
+            { position: vec3(-13.8, 1, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false, isActive: true }, 
+            { position: vec3(-13.8, 3, 1), velocity: vec3(0, 0, 0), color: "#FFFF00", isCueBall: false, isActive: true }, 
         ];
 
         this.pockets = [
-            { position: vec3(-14, -7, 0.8)},
-            { position: vec3(14, -7, 0.8)},
-            { position: vec3(0, -7, 0.8)},
-            { position: vec3(0, 7, 0.8)},
-            { position: vec3(14, 7, 0.8)},
-            { position: vec3(-14, 7, 0.8)},
+            { position: vec3(-20, -10, 0.01)},
+            { position: vec3(20, -10, 0.01)},
+            { position: vec3(0, -10, 0.01)},
+            { position: vec3(0, 10, 0.01)},
+            { position: vec3(20, 10, 0.01)},
+            { position: vec3(-20, 10, 0.01)},
 ]
 
         
@@ -179,7 +179,9 @@ export class Project_Scene extends Scene {
 
         var t_p2 = model_transform.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(8, 0, 0));
         this.balls.forEach(ball => {
-            this.draw_ball(context, program_state, ball.position, ball.color);
+            if (ball.isActive) {
+                this.draw_ball(context, program_state, ball.position, ball.color);
+            }
         });
 
         this.draw_table(context, program_state, model_transform, t);
@@ -304,8 +306,11 @@ export class Project_Scene extends Scene {
             // Ball-to-pocket collisions
             this.pockets.forEach(pocket =>{
                 const distance = ball1.position.minus(pocket.position).norm();
-                if (distance < 1) {
-                    this.balls.splice(index1, 1)
+                if (distance < 2) {
+                    if (this.balls.filter(b => b.isActive && !b.isCueBall).length > 1) { // 8 ball logic
+                        console.log("game end");
+                    }
+                    ball1.isActive = false; 
                 }
             })
             // Ball-to-wall collisions
@@ -356,10 +361,14 @@ export class Project_Scene extends Scene {
     }
     draw_pockets(context, program_state) {
         this.pockets.forEach(pocket => {
-            let pocket_transform = Mat4.scale(1.4, 1.4, 0.005).times(Mat4.translation(...pocket.position));
-            this.shapes.pocket.draw(context, program_state, pocket_transform, this.materials.pocket)
+            // First, translate the pocket to its position, then apply scaling.
+            // This ensures that the pocket is placed at the correct location with the correct size.
+            let pocket_transform = Mat4.translation(...pocket.position)
+                                   .times(Mat4.scale(1.4, 1.4, 0.005));
+            this.shapes.pocket.draw(context, program_state, pocket_transform, this.materials.pocket);
         });
     }
+    
     draw_aim(context, program_state, start_point, end_point) {
         if (start_point[0] < end_point[0]) { //mirror it
             let temp = start_point;
