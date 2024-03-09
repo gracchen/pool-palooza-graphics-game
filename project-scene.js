@@ -10,7 +10,6 @@ export class Project_Scene extends Scene {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
 
-        // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             ball: new defs.Subdivision_Sphere(4),
             table: new defs.Square(),
@@ -130,18 +129,12 @@ export class Project_Scene extends Scene {
         }
 
         if (!context.scratchpad.controls) {
-            // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
-            // Define the global camera and projection matrices, which are stored in program_state.
             program_state.set_camera(this.initial_camera_location);
         }
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         this.setup_mouse_controls(context.canvas, dt);
         this.mouse_controls = new MouseControls(this.camera, program_state)
         this.update_balls(dt);
-        //some failed attempts at using MouseControls.js to get mouse-to-world-space ray (https://github.com/junhongwang418/museum-3d/blob/c9d6631f78d22d312c2c29836a8b2cc63817f4a5/Controls/MovementControls.js#L49)
-        //this.mouse_controls.update(program_state);
-        //program_state.current_ray = this.mouse_controls.current_ray;
-        //program_state.ray_start_position =this.initial_camera_location;
         this.collision_detected(t);
 
         this.table_width = 20;
@@ -218,7 +211,7 @@ export class Project_Scene extends Scene {
 
     setup_mouse_controls(canvas, dt) {
         let dragging = false;
-        const rect = canvas.getBoundingClientRect(); // Get canvas position and size
+        const rect = canvas.getBoundingClientRect(); 
         
         canvas.addEventListener('mousedown', (e) => {
             dragging = true;
@@ -252,15 +245,12 @@ export class Project_Scene extends Scene {
         });
         
         canvas.addEventListener('mouseup', (e) => {
-            // this.playSound('cueHit');
             console.log("mouse up");
             dragging = false;
             this.drag = false;
             // Reset the velocity of the cue ball when the mouse is released
             const cueBall = this.balls.find(ball => ball.isCueBall);
-            // if (cueBall) {
-            //     cueBall.velocity = vec3(0, 0, 0);
-            // }
+
 
             if (!this.shoot_processed) {
                 const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2;
@@ -286,14 +276,11 @@ export class Project_Scene extends Scene {
 
     update_balls(dt) {
         this.balls.forEach(ball => {
-            // Update position based on velocity
             ball.position = ball.position.plus(ball.velocity.times(dt));
     
-            // Apply friction (or some form of deceleration)
             ball.velocity = ball.velocity.times(0.98); // Adjust the friction coefficient as needed
         });
     
-        // Handle collisions
         this.collision_detected();
     }
     
@@ -372,8 +359,6 @@ export class Project_Scene extends Scene {
     }
     draw_pockets(context, program_state) {
         this.pockets.forEach(pocket => {
-            // First, translate the pocket to its position, then apply scaling.
-            // This ensures that the pocket is placed at the correct location with the correct size.
             let pocket_transform = Mat4.translation(...pocket.position)
                                    .times(Mat4.scale(1.4, 1.4, 0.005));
             this.shapes.pocket.draw(context, program_state, pocket_transform, this.materials.pocket);
