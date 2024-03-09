@@ -16,7 +16,7 @@ export class Project_Scene extends Scene {
             table: new defs.Square(),
             wall: new defs.Square(),
             line: new defs.Square(),
-            pocket: new defs.Rounded_Capped_Cylinder(40, 40, [[0, 40], [0, 40]]),
+            pocket: new defs.Rounded_Capped_Cylinder(100, 40, [[0, 40], [0, 40]]),
             wall_3d: new defs.Cube(),
         };
 
@@ -50,10 +50,10 @@ export class Project_Scene extends Scene {
         ];
 
         this.pockets = [
-            { position: vec3(-19.55, -9.55, 0.5)},
-            { position: vec3(-19.55, 9.55, 0.5)},
-            { position: vec3(19.55, 9.55, 0.5)},
-            { position: vec3(19.55, -9.55, 0.5)},
+            { position: vec3(-19.5, -9.25, 1)},
+            { position: vec3(-19.5, 9.25, 1)},
+            { position: vec3(19.5, 9.25, 1)},
+            { position: vec3(19.5, -9.25, 1)},
 ]
 
 
