@@ -307,8 +307,10 @@ export class Project_Scene extends Scene {
             this.pockets.forEach(pocket =>{
                 const distance = ball1.position.minus(pocket.position).norm();
                 if (distance < 2) {
-                    if (this.balls.filter(b => b.isActive && !b.isCueBall).length > 1) { // 8 ball logic
-                        console.log("game end");
+                    if (ball1.color === "#000000") {  // 8 ball logic
+                        if (this.balls.filter(b => b.isActive && !b.isCueBall).length > 1) {
+                            console.log("game end");
+                        }
                     }
                     ball1.isActive = false; 
                 }
