@@ -50,14 +50,13 @@ export class Project_Scene extends Scene {
         ];
 
         this.pockets = [
-            { position: vec3(-19.5, -9.25, 1)},
-            { position: vec3(-19.5, 9.25, 1)},
-            { position: vec3(0, 10, 1)},
-            { position: vec3(0, -10, 1)},
-            { position: vec3(19.5, 9.25, 1)},
-            { position: vec3(19.5, -9.25, 1)},
+            { position: vec3(-14, -7, 0.8)},
+            { position: vec3(14, -7, 0.8)},
+            { position: vec3(0, -7, 0.8)},
+            { position: vec3(0, 7, 0.8)},
+            { position: vec3(14, 7, 0.8)},
+            { position: vec3(-14, 7, 0.8)},
 ]
-
 
         
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -357,7 +356,7 @@ export class Project_Scene extends Scene {
     }
     draw_pockets(context, program_state) {
         this.pockets.forEach(pocket => {
-            let pocket_transform = Mat4.translation(...pocket.position)
+            let pocket_transform = Mat4.scale(1.4, 1.4, 0.005).times(Mat4.translation(...pocket.position));
             this.shapes.pocket.draw(context, program_state, pocket_transform, this.materials.pocket)
         });
     }
