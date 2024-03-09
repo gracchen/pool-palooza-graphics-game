@@ -49,10 +49,10 @@ export class Project_Scene extends Scene {
         ];
 
         this.pockets = [
-            { position: vec3(-19.7, -9.7, 1)},
-            { position: vec3(-19.7, 9.7, 1)},
-            { position: vec3(19.7, 9.7, 1)},
-            { position: vec3(19.7, -9.7, 1)},
+            { position: vec3(-19.55, -9.55, 0.5)},
+            { position: vec3(-19.55, 9.55, 0.5)},
+            { position: vec3(19.55, 9.55, 0.5)},
+            { position: vec3(19.55, -9.55, 0.5)},
 ]
 
 
@@ -270,7 +270,7 @@ export class Project_Scene extends Scene {
             // Ball-to-pocket collisions
             this.pockets.forEach(pocket =>{
                 const distance = ball1.position.minus(pocket.position).norm();
-                if (distance < 1.5) {
+                if (distance < 1) {
                     this.balls.splice(index1, 1)
                 }
             })
