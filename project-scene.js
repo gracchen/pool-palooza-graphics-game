@@ -1,8 +1,9 @@
 import {defs, tiny} from './examples/common.js';
 import MouseControls from "./MouseControls.js";
+import {Text_Line} from './examples/text-demo.js';
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, Texture, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
 } = tiny;
 
 export class Project_Scene extends Scene {
@@ -17,6 +18,8 @@ export class Project_Scene extends Scene {
             line: new defs.Square(),
             pocket: new defs.Rounded_Capped_Cylinder(100, 40, [[0, 40], [0, 40]]),
             wall_3d: new defs.Cube(),
+            cube: new defs.Cube(),
+            text: new Text_Line(35)
         };
 
 
@@ -33,6 +36,21 @@ export class Project_Scene extends Scene {
             pocket: new Material(new defs.Phong_Shader(),
                 {ambient: 1, color: hex_color("#000000")})
         }
+
+        //text:
+        const phong = new defs.Phong_Shader();
+        const texture = new defs.Textured_Phong(1);
+        this.grey = new Material(phong, {
+            color: color(.5, .5, .5, 1), ambient: 0,
+            diffusivity: .3, specularity: .5, smoothness: 10
+        })
+        this.game_is_over = false;
+
+        // To show text you need a Material like this one:
+        this.text_image = new Material(texture, {
+            ambient: 1, diffusivity: 0, specularity: 0,
+            texture: new Texture("assets/text.png")
+        });
 
         this.balls = [
             { position: vec3(8, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true, isActive: true }, // Cue ball
@@ -56,7 +74,8 @@ export class Project_Scene extends Scene {
             { position: vec3(19.5, 9.5, 0.01)},
             { position: vec3(-19.5, 9.5, 0.01)},
 ]
-
+        this.shots_made = 0;
+        this.balls_potted = 0;
         
         this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
 
@@ -117,11 +136,24 @@ export class Project_Scene extends Scene {
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
 
         var cue_ball = this.balls.find(ball => ball.isCueBall)
+
+        if (this.game_is_over) {
+            this.game_over(context, program_state);
+            this.initial_camera_location = Mat4.identity().times(Mat4.translation(0,0,-10));
+
+            if (!context.scratchpad.controls) {
+                // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+                // Define the global camera and projection matrices, which are stored in program_state.
+                program_state.set_camera(this.initial_camera_location);
+            }
+            return;
+        }
+
         var cue_vel = cue_ball.velocity;
         var cue_is_moving = Math.sqrt(cue_vel.dot(cue_vel)) - 1 > 0.02;
 
         if (cue_is_moving) {
-            this.initial_camera_location = Mat4.look_at(cue_ball.position.minus(this.initial_shoot_dir.normalized().times(4)).plus(vec3(0,0,2)), cue_ball.position, vec3(0, 0, 1));
+            this.initial_camera_location = Mat4.look_at(cue_ball.position.minus(this.initial_shoot_dir.normalized().times(4)).plus(vec3(5,5,5)), cue_ball.position, vec3(0, 0, 1));
         }
         else {
             this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -209,6 +241,36 @@ export class Project_Scene extends Scene {
 
     }
 
+    game_over(context, program_state) {
+        program_state.lights = [new Light(vec4(3, 2, 1, 0), color(1, 1, 1, 1), 1000000),
+        new Light(vec4(3, 10, 10, 1), color(1, .7, .7, 1), 100000)];
+        program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0, 0, 0], [0, 1, 0])));
+        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 500);
+
+        this.shapes.cube.draw(context, program_state, Mat4.identity(), this.grey);
+
+        let strings = ["", "", "", "",
+        "Game over!\nShots made: " + this.shots_made + "\nBalls potted: " + this.balls_potted, ""];
+
+        // Sample the "strings" array and draw them onto a cube.
+        for (let i = 0; i < 3; i++)
+            for (let j = 0; j < 2; j++) {             // Find the matrix for a basis located along one of the cube's sides:
+                let cube_side = Mat4.rotation(i == 0 ? Math.PI / 2 : 0, 1, 0, 0)
+                    .times(Mat4.rotation(Math.PI * j - (i == 1 ? Math.PI / 2 : 0), 0, 1, 0))
+                    .times(Mat4.translation(-.9, .9, 1.01));
+
+                const multi_line_string = strings[2 * i + j].split('\n');
+                // Draw a Text_String for every line in our string, up to 30 lines:
+                for (let line of multi_line_string.slice(0, 30)) {             // Assign the string to Text_String, and then draw it.
+                    this.shapes.text.set_string(line, context.context);
+                    this.shapes.text.draw(context, program_state, Mat4.identity().times(cube_side)
+                        .times(Mat4.scale(.03, .03, .03)), this.text_image);
+                    // Move our basis down a line.
+                    cube_side.post_multiply(Mat4.translation(0, -.06, 0));
+                }
+            }
+        }
+        
     setup_mouse_controls(canvas, dt) {
         let dragging = false;
         const rect = canvas.getBoundingClientRect(); 
@@ -253,6 +315,7 @@ export class Project_Scene extends Scene {
 
 
             if (!this.shoot_processed) {
+                this.shots_made++;
                 const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2;
                 const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2;
                 var final_mouse_pos = vec3(x, y, 1);
@@ -296,6 +359,7 @@ export class Project_Scene extends Scene {
                 if (distance < 2 && ball1.isActive) {
                     if (ball1.color !== "#000000" && !ball1.isCueBall) {
                         this.playSound('score');
+                        this.balls_potted++;
                     }
 
                     if (ball1.color === "#000000") {  // 8 ball logic
@@ -306,6 +370,7 @@ export class Project_Scene extends Scene {
 
                     if(ball1.isCueBall) {
                         console.log("cue ball in pocket"); //TODO: game end logic
+                        this.game_is_over = true
                     }
 
                     ball1.isActive = false; 
