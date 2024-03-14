@@ -420,6 +420,31 @@ export class Project_Scene extends Scene {
                         this.effectChangeToBlack = true;
                     }
 
+                    // ORANGE randomize ball positions
+                    if (ball1.color === "#FFA500") {
+                        this.balls.forEach(ball => {
+                            if (ball.isActive) {
+                                var newPos;
+
+                                while (true) {
+                                    newPos = vec3(Math.random() * 36 - 18, Math.random() * 16 - 8, 1);
+
+                                    var tempOverlap = false;
+
+                                    this.balls.forEach(b1 => {
+                                        if (b1.isActive && b1.color !== ball.color) {
+                                            if ((newPos.minus(b1.position)).norm() < 2) tempOverlap = true;
+                                        }
+                                    });
+
+                                    if (!tempOverlap) break;
+                                }
+
+                                ball.position = newPos;
+                            }
+                        });
+                    }
+
                     ball1.isActive = false; 
                 }
             })
