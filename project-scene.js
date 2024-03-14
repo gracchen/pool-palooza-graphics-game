@@ -365,6 +365,7 @@ export class Project_Scene extends Scene {
                     if (ball1.color === "#000000") {  // 8 ball logic
                         if (this.balls.filter(b => b.isActive && !b.isCueBall).length > 1) {
                             console.log("game end"); // TODO: game end logic
+                            this.game_is_over = true;
                         }
                     }
 
