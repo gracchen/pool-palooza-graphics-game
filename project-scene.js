@@ -52,6 +52,7 @@ export class Project_Scene extends Scene {
         })
         this.game_is_over = false;
         this.game_is_victory = false;
+        this.information_displayed = false;
 
         // To show text you need a Material like this one:
         this.text_image = new Material(texture, {
@@ -171,7 +172,11 @@ export class Project_Scene extends Scene {
         this.key_triggered_button("Restart game", ["r"], () => {
             this.reset();
         });
+        this.key_triggered_button("Game information", ["i"], () => {
+            this.information_displayed = !this.information_displayed;
+        });
     }
+
 
     reset() {
         this.drag = false;
@@ -208,6 +213,7 @@ export class Project_Scene extends Scene {
         this.effectRemoveTrajectory = false;
         this.effectChangeToBlack = false;
         this.effectStickyWall = 0;
+        this.effectOppositeShot = false;
         this.effectMagnetCueBall = false;
 
         // bg music
@@ -216,7 +222,23 @@ export class Project_Scene extends Scene {
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
-
+            if(this.information_displayed) {
+                let str = "Green: Speeds up the next shot's velocity.\n" +
+                    "Orange: Randomizes the positions of remaining all balls.\n" +
+                    "Black (8-Ball): Game over if it's not the last ball pocketed.\n" +
+                    "Yellow: Activates sticky walls (no rebound).\n" +
+                    "Red: Ball shoots in the opposite direction.\n" +
+                    "Blue: Turns all balls black until the next one is pocketed.\n" +
+                    "Purple: Removes trajectory guide on the next shot.\n" +
+                    "Pink: Magnet cue ball that attracts nearby balls.\n" +
+                    "Brown: Rotates the camera view while aiming.\n" +
+                    "Gray: Normal ball with no special effects.\n"
+                let stats_transform = Mat4.identity()
+                    .times(Mat4.scale(0.7,0.7,1))
+                    .times(Mat4.translation(-1,-0.05,1))
+                ;
+                this.display_stats(stats_transform, str, context, program_state);
+            }
         var cue_ball = this.balls.find(ball => ball.isCueBall)
 
         if (this.game_is_over || this.game_is_victory) {
@@ -305,7 +327,6 @@ export class Project_Scene extends Scene {
             if (ball.isActive) {
                 let cue_ball_position = this.balls.find(b => b.isCueBall).position; // Renamed the variable inside the find function to avoid conflict
                 if (this.effectMagnetCueBall && !ball.isCueBall && cue_is_moving) {
-                    console.log("INITIAL " + ball.position); // Corrected the spelling of "INITIAL"
                     let attraction_force = vec3(0, 0, 0); // Initialized attraction_force as a vector
 
                     // Calculate the direction vector from the ball to the cue ball
@@ -336,7 +357,6 @@ export class Project_Scene extends Scene {
 
                     // Ensure the ball stays on the same plane (e.g., Z = 1)
                     ball.position[2] = 1;
-                    console.log("FINAL " + ball.position);
                 }
                 this.draw_ball(context, program_state, ball.position, ball.color, ball.isCueBall);
             }
