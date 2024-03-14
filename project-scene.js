@@ -96,6 +96,7 @@ export class Project_Scene extends Scene {
 
         // DIFFERENT EFFECTS
         this.effectSpeedUpActive = false;
+        this.effectRotateBoard = false;
     }
 
     async loadSound(key, url) {
@@ -155,19 +156,21 @@ export class Project_Scene extends Scene {
 
         var cue_vel = cue_ball.velocity;
         var cue_is_moving = Math.sqrt(cue_vel.dot(cue_vel)) - 1 > 0.02;
+        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
         if (cue_is_moving) {
             this.initial_camera_location = Mat4.look_at(cue_ball.position.minus(this.initial_shoot_dir.normalized().times(4)).plus(vec3(5,5,5)), cue_ball.position, vec3(0, 0, 1));
         }
         else {
-            this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
+            if (!this.effectRotateBoard) this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
 
+            else this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(Math.cos(t), 1, 0));
         }
 
         if (!context.scratchpad.controls) {
             program_state.set_camera(this.initial_camera_location);
         }
-        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+
         this.setup_mouse_controls(context.canvas, dt);
         this.mouse_controls = new MouseControls(this.camera, program_state)
         this.update_balls(dt);
@@ -333,6 +336,10 @@ export class Project_Scene extends Scene {
                     this.effectSpeedUpActive = false; 
                 }
 
+                if (this.effectRotateBoard) {
+                    this.effectRotateBoard = false;
+                }
+
                 if (cueBall) {
                     this.playSound('cueHit');
                     cueBall.velocity = cueBall.velocity.plus(shoot_dir);
@@ -388,6 +395,10 @@ export class Project_Scene extends Scene {
                     // GREEN Speed up ball
                     if (ball1.color === "#008000") { 
                         this.effectSpeedUpActive = true;
+                    }
+
+                    if (ball1.color === "#8B4513") {
+                        this.effectRotateBoard = true;
                     }
 
                     ball1.isActive = false; 
