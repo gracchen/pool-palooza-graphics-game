@@ -105,6 +105,7 @@ export class Project_Scene extends Scene {
         this.effectRotateBoard = false;
         this.effectRemoveTrajectory = false;
         this.effectChangeToBlack = false;
+        this.effectStickyWall = 0;
 
         // bg music
         this.initializeBackgroundMusic();
@@ -374,6 +375,10 @@ export class Project_Scene extends Scene {
                     this.effectRemoveTrajectory = false;
                 }
 
+                if (this.effectStickyWall > 0) {
+                    this.effectStickyWall -= 1;
+                }
+
                 if (cueBall) {
                     this.playSound('cueHit');
                     cueBall.velocity = cueBall.velocity.plus(shoot_dir);
@@ -450,6 +455,11 @@ export class Project_Scene extends Scene {
                         this.effectChangeToBlack = true;
                     }
 
+                    // YELLOW stick ball effect
+                    if (ball1.color === "#FFFF00") {
+                        this.effectStickyWall = 2;
+                    }
+
                     // ORANGE randomize ball positions
                     if (ball1.color === "#FFA500") {
                         this.balls.forEach(ball => {
@@ -487,11 +497,13 @@ export class Project_Scene extends Scene {
             // Ball-to-wall collisions
             if (Math.abs(ball1.position[0]) > (this.table_width - this.wall_thickness)) {
                 ball1.velocity[0] *= -0.8;
+                if (this.effectStickyWall > 0) ball1.velocity = vec3(0,0,0);
                 ball1.position[0] = Math.sign(ball1.position[0]) * (this.table_width- this.wall_thickness);
                 wallBounce = true;
             }
             if (Math.abs(ball1.position[1]) > (this.table_height - this.wall_thickness)) {
                 ball1.velocity[1] *= -0.8;
+                if (this.effectStickyWall > 0) ball1.velocity = vec3(0,0,0);
                 ball1.position[1] = Math.sign(ball1.position[1]) * (this.table_height - this.wall_thickness);
                 wallBounce = true;
             }
