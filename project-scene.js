@@ -25,17 +25,23 @@ export class Project_Scene extends Scene {
 
         this.drag = false;
         this.mouse_coords = vec3(0,0,1);
+
+        // this.textures = {
+        //     felt: load_texture("./assets/rgb.jpg")
+        // };
+
         // *** Materials
         this.materials = {
             ball: new Material(new defs.Phong_Shader(),
                 {ambient: 0.9, specularity: 0.2, color: hex_color("#dfe6c1")}),
-            table: new Material(new defs.Phong_Shader(),
-            { ambient: 1, color: hex_color("#4F7942") }),
-            wall: new Material(new defs.Phong_Shader(),
-                { ambient: 1, color: hex_color("#732b11") }),
+            table: new Material(new defs.Textured_Phong(),
+            { ambient: 1, diffusivity: 0.5, specularity: 1, texture: new Texture("assets/felt.jpeg", 'LINEAR_MIPMAP_LINEAR') }),
+            wall: new Material(new defs.Textured_Phong(),
+                { ambient: 0.8, texture: new Texture("assets/wood.png", 'LINEAR_MIPMAP_LINEAR')  }),
             pocket: new Material(new defs.Phong_Shader(),
                 {ambient: 1, color: hex_color("#000000")})
         }
+
 
         //text:
         const phong = new defs.Phong_Shader();
