@@ -25,17 +25,23 @@ export class Project_Scene extends Scene {
 
         this.drag = false;
         this.mouse_coords = vec3(0,0,1);
+
+        // this.textures = {
+        //     felt: load_texture("./assets/rgb.jpg")
+        // };
+
         // *** Materials
         this.materials = {
             ball: new Material(new defs.Phong_Shader(),
-                {ambient: 0.9, specularity: 0.2, color: hex_color("#dfe6c1")}),
-            table: new Material(new defs.Phong_Shader(),
-            { ambient: 1, color: hex_color("#4F7942") }),
-            wall: new Material(new defs.Phong_Shader(),
-                { ambient: 1, color: hex_color("#732b11") }),
+                {ambient: 0.9, specularity: 0.3, color: hex_color("#dfe6c1")}),
+            table: new Material(new defs.Textured_Phong(),
+            { ambient: 1, diffusivity: 0.5, specularity: 1, texture: new Texture("assets/felt.jpeg", 'LINEAR_MIPMAP_LINEAR') }),
+            wall: new Material(new defs.Textured_Phong(),
+                { ambient: 0.8, texture: new Texture("assets/wood.png", 'LINEAR_MIPMAP_LINEAR')  }),
             pocket: new Material(new defs.Phong_Shader(),
                 {ambient: 1, color: hex_color("#000000")})
         }
+
 
         //text:
         const phong = new defs.Phong_Shader();
@@ -57,7 +63,7 @@ export class Project_Scene extends Scene {
             { position: vec3(-8.4, 0, 1), velocity: vec3(0, 0, 0), color: "#FF0000", isCueBall: false, isActive: true }, // Red
             { position: vec3(-10.2, 1, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false, isActive: true }, // Orange
             { position: vec3(-10.2, -1, 1), velocity: vec3(0, 0, 0), color: "#FFFF00", isCueBall: false, isActive: true }, // Yellow
-            { position: vec3(-12, 2, 1), velocity: vec3(0, 0, 0), color: "#008000", isCueBall: false, isActive: true }, // Green
+            { position: vec3(-12, 2, 1), velocity: vec3(0, 0, 0), color: "#013220", isCueBall: false, isActive: true }, // Green
             { position: vec3(-12, 0, 1), velocity: vec3(0, 0, 0), color: "#000000", isCueBall: false, isActive: true }, // Black
             { position: vec3(-12, -2, 1), velocity: vec3(0, 0, 0), color: "#800080", isCueBall: false, isActive: true }, // Purple
             { position: vec3(-13.8, -3, 1), velocity: vec3(0, 0, 0), color: "#0000FF", isCueBall: false, isActive: true }, // Blue
@@ -399,7 +405,7 @@ export class Project_Scene extends Scene {
                     }
 
                     // GREEN Speed up ball
-                    if (ball1.color === "#008000") { 
+                    if (ball1.color === "#013220") { 
                         this.effectSpeedUpActive = true;
                     }
                     
@@ -541,8 +547,8 @@ export class Project_Scene extends Scene {
 
     draw_light(context, program_state, model_transform, t) {
         let sun_color = color(1, 1, 1, 1); 
-        const light_position = vec4(0, 0, 10, 1);
-        program_state.lights = [new Light(light_position, sun_color, 20)];
+        const light_position = vec4(0, 0, 30, 1);
+        program_state.lights = [new Light(light_position, sun_color, 250)];
     }
 
     draw_ball(context, program_state, position, color) {
