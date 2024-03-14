@@ -222,128 +222,128 @@ export class Project_Scene extends Scene {
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
-            if(this.information_displayed) {
-                let str = "Green: Speeds up the next shot's velocity.\n" +
-                    "Orange: Randomizes the positions of remaining all balls.\n" +
-                    "Black (8-Ball): Game over if it's not the last ball pocketed.\n" +
-                    "Yellow: Activates sticky walls (no rebound).\n" +
-                    "Red: Ball shoots in the opposite direction.\n" +
-                    "Blue: Turns all balls black until the next one is pocketed.\n" +
-                    "Purple: Removes trajectory guide on the next shot.\n" +
-                    "Pink: Magnet cue ball that attracts nearby balls.\n" +
-                    "Brown: Rotates the camera view while aiming.\n" +
-                    "Gray: Normal ball with no special effects.\n"
-                let stats_transform = Mat4.identity()
-                    .times(Mat4.scale(0.7,0.7,1))
-                    .times(Mat4.translation(-1,-0.05,1))
-                ;
-                this.display_stats(stats_transform, str, context, program_state);
-            }
-        var cue_ball = this.balls.find(ball => ball.isCueBall)
+        if (this.information_displayed) {
+            let str = "          GAME INFORMATION: \n\n" +
+                "Green: Speeds up Cue Ball\n" +
+                "Orange: Randomizes all balls\n" +
+                "Black: Must be pocketed last\n" +
+                "Yellow: Sticky walls (no rebound)\n" +
+                "Red: Cue ball shoots backward\n" +
+                "Blue: Turns all balls black\n" +
+                "Purple: Removes trajectory guide\n" +
+                "Pink: Cue ball becomes magnetic\n" +
+                "Brown: Rotates the camera view\n" +
+                "Gray: Normal ball\n"
+            let stats_transform = Mat4.identity()
+                .times(Mat4.scale(0.5, 0.5, 1))
+                .times(Mat4.translation(-1, 0.18, 1))
+            ;
+            this.display_stats(stats_transform, str, context, program_state);
+        } else {
+            var cue_ball = this.balls.find(ball => ball.isCueBall)
 
-        if (this.game_is_over || this.game_is_victory) {
-            if (this.game_is_over) {
-                let str = "   Game Over!\n\n Shots made: " + this.shots_made + "\n Balls potted: " + this.balls_potted +"\n\n\nPress r to restart";
-                this.display_stats(Mat4.identity(), str, context, program_state);
-            } else {
-                let str = " Congratulations!\n\n Shots made: " + this.shots_made + "\n Balls potted: " + this.balls_potted +"\n\n\nPress r to restart";
-                this.display_stats(Mat4.identity(), str, context, program_state);
+            if (this.game_is_over || this.game_is_victory) {
+                if (this.game_is_over) {
+                    this.information_displayed = false;
+                    let str = "   Game Over!\n\n Shots made: " + this.shots_made + "\n Balls potted: " + this.balls_potted + "\n\n\nPress r to restart";
+                    this.display_stats(Mat4.identity(), str, context, program_state);
+                } else {
+                    let str = " Congratulations!\n\n Shots made: " + this.shots_made + "\n Balls potted: " + this.balls_potted + "\n\n\nPress r to restart";
+                    this.display_stats(Mat4.identity(), str, context, program_state);
+                }
+                this.initial_camera_location = Mat4.identity().times(Mat4.translation(0, 0, -10));
+
+                if (!context.scratchpad.controls) {
+                    // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+                    // Define the global camera and projection matrices, which are stored in program_state.
+                    program_state.set_camera(this.initial_camera_location);
+                }
+                return;
             }
-            this.initial_camera_location = Mat4.identity().times(Mat4.translation(0,0,-10));
+
+            let stats_transform = Mat4.identity()
+                .times(Mat4.scale(0.7, 0.7, 1))
+                .times(Mat4.translation(-1, 0.18, 1))
+            ;
+            let str = "Shots made: " + this.shots_made + "    Balls potted: " + this.balls_potted;
+
+            this.display_stats(stats_transform, str, context, program_state);
+
+            var cue_vel = cue_ball.velocity;
+            var cue_is_moving = Math.sqrt(cue_vel.dot(cue_vel)) - 1 > 0.02;
+            const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+
+            if (cue_is_moving) {
+                this.initial_camera_location = Mat4.look_at(cue_ball.position.minus(this.initial_shoot_dir.normalized().times(4)).plus(vec3(5, 5, 5)), cue_ball.position, vec3(0, 0, 1));
+            } else {
+                if (!this.effectRotateBoard) this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
+
+                else this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(Math.cos(t), 1, 0));
+            }
 
             if (!context.scratchpad.controls) {
-                // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
-                // Define the global camera and projection matrices, which are stored in program_state.
                 program_state.set_camera(this.initial_camera_location);
             }
-            return;
-        }
 
-        let stats_transform = Mat4.identity()
-            .times(Mat4.scale(0.7,0.7,1))
-            .times(Mat4.translation(-1,0.18,1))
-        ;
-        let str = "Shots made: " + this.shots_made + "    Balls potted: " + this.balls_potted;
+            this.setup_mouse_controls(context.canvas, dt);
+            this.mouse_controls = new MouseControls(this.camera, program_state)
+            this.update_balls(dt);
+            this.collision_detected(t);
 
-        this.display_stats(stats_transform, str, context, program_state);
+            this.table_width = 20;
+            this.table_height = 10;
+            this.wall_thickness = 1;
+            this.collided = false;
 
-        var cue_vel = cue_ball.velocity;
-        var cue_is_moving = Math.sqrt(cue_vel.dot(cue_vel)) - 1 > 0.02;
-        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+            if (cue_is_moving) {
+                program_state.projection_transform = Mat4.perspective(
+                    Math.PI / 4, context.width / context.height, .1, 100);
+            } else {
+                let m = Mat4.orthographic(-1.0, 1.0, -1.0, 1.0, 0, 100);
 
-        if (cue_is_moving) {
-            this.initial_camera_location = Mat4.look_at(cue_ball.position.minus(this.initial_shoot_dir.normalized().times(4)).plus(vec3(5,5,5)), cue_ball.position, vec3(0, 0, 1));
-        }
-        else {
-            if (!this.effectRotateBoard) this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
+                let plane_size = 23;
+                let ratio = context.width / context.height;
+                let right = plane_size;
+                let left = -plane_size;
+                let top = plane_size / ratio;
+                let bottom = -plane_size / ratio;
+                let near = 1;
+                let far = 100;
 
-            else this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(Math.cos(t), 1, 0));
-        }
+                let A = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near));
+                let B = Mat4.translation(-left - right, -top - bottom, -near - far);
+                let C = Mat4.scale(2, 2, -2);
+                let orthographic_proj = A.times(B).times(C);
 
-        if (!context.scratchpad.controls) {
-            program_state.set_camera(this.initial_camera_location);
-        }
+                program_state.projection_transform = orthographic_proj;
+            }
 
-        this.setup_mouse_controls(context.canvas, dt);
-        this.mouse_controls = new MouseControls(this.camera, program_state)
-        this.update_balls(dt);
-        this.collision_detected(t);
+            let model_transform = Mat4.identity();
 
-        this.table_width = 20;
-        this.table_height = 10;
-        this.wall_thickness = 1;
-        this.collided = false;
+            this.draw_light(context, program_state, model_transform, t);
 
-        if (cue_is_moving) {
-            program_state.projection_transform = Mat4.perspective(
-                Math.PI / 4, context.width / context.height, .1, 100);
-        }
-        else {
-            let m = Mat4.orthographic(-1.0, 1.0, -1.0, 1.0, 0, 100);
+            var t_p2 = model_transform.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(8, 0, 0));
+            this.balls.forEach(ball => {
+                if (ball.isActive) {
+                    let cue_ball_position = this.balls.find(b => b.isCueBall).position; // Renamed the variable inside the find function to avoid conflict
+                    if (this.effectMagnetCueBall && !ball.isCueBall && cue_is_moving) {
+                        let attraction_force = vec3(0, 0, 0); // Initialized attraction_force as a vector
 
-            let plane_size = 23;
-            let ratio = context.width / context.height;
-            let right = plane_size;
-            let left = -plane_size;
-            let top = plane_size / ratio;
-            let bottom = -plane_size / ratio;
-            let near = 1;
-            let far = 100;
+                        // Calculate the direction vector from the ball to the cue ball
+                        let direction = cue_ball_position.minus(ball.position);
 
-            let A = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near));
-            let B = Mat4.translation(-left - right, -top - bottom, -near - far);
-            let C = Mat4.scale(2, 2, -2);
-            let orthographic_proj = A.times(B).times(C);
+                        // Calculate the distance between the ball and the cue ball
+                        let distance = direction.norm();
 
-            program_state.projection_transform = orthographic_proj;
-        }
+                        // Normalize the direction vector
+                        direction.normalize();
 
-        let model_transform = Mat4.identity();
+                        // Apply attraction force inversely proportional to the distance
+                        if (distance > 2) {
+                            attraction_force = direction.times(0.1 / distance);
+                        }
 
-        this.draw_light(context, program_state, model_transform, t);
-
-        var t_p2 = model_transform.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(8, 0, 0));
-        this.balls.forEach(ball => {
-            if (ball.isActive) {
-                let cue_ball_position = this.balls.find(b => b.isCueBall).position; // Renamed the variable inside the find function to avoid conflict
-                if (this.effectMagnetCueBall && !ball.isCueBall && cue_is_moving) {
-                    let attraction_force = vec3(0, 0, 0); // Initialized attraction_force as a vector
-
-                    // Calculate the direction vector from the ball to the cue ball
-                    let direction = cue_ball_position.minus(ball.position);
-
-                    // Calculate the distance between the ball and the cue ball
-                    let distance = direction.norm();
-
-                    // Normalize the direction vector
-                    direction.normalize();
-
-                    // Apply attraction force inversely proportional to the distance
-                    if (distance > 2) {
-                        attraction_force = direction.times(0.1 / distance);
-                    }
-
-                    this.balls.forEach(other_ball => {
+                        this.balls.forEach(other_ball => {
                             if (other_ball.color !== ball.color && attraction_force.norm() !== 0) {
                                 let overlap = other_ball.position.minus(ball.position.plus(attraction_force));
                                 if (overlap.norm() < 2.005) {
@@ -352,51 +352,51 @@ export class Project_Scene extends Scene {
                             }
                         });
 
-                    // Update the position of the ball based on attraction force
-                    ball.position = ball.position.plus(attraction_force);
+                        // Update the position of the ball based on attraction force
+                        ball.position = ball.position.plus(attraction_force);
 
-                    // Ensure the ball stays on the same plane (e.g., Z = 1)
-                    ball.position[2] = 1;
+                        // Ensure the ball stays on the same plane (e.g., Z = 1)
+                        ball.position[2] = 1;
+                    }
+                    this.draw_ball(context, program_state, ball.position, ball.color, ball.isCueBall);
                 }
-                this.draw_ball(context, program_state, ball.position, ball.color, ball.isCueBall);
-            }
-        });
+            });
 
-        if(!cue_is_moving && this.effectMagnetCueBall && this.magnetShotNumber !== this.shots_made)
-        {
-            this.effectMagnetCueBall = false;
-        }
-
-        this.draw_table(context, program_state, model_transform, t);
-        this.draw_wall(context, program_state, model_transform, t);
-        this.draw_pockets(context, program_state);
-        if (this.drag) {
-            const cueBallPosition = this.balls.find(ball => ball.isCueBall).position;
-            const oppositeDirection = this.initial_mouse_pos.minus(this.mouse_coords);
-            var oppositeEnd = cueBallPosition.plus(oppositeDirection);
-
-            //clamp to avoid walls
-            if (oppositeEnd[0] > 20) {
-                var scale_to_wall = (20 - cueBallPosition[0]) / oppositeDirection[0];
-                oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
-            } else if (oppositeEnd[0] < -20) {
-                var scale_to_wall = (-20 - cueBallPosition[0]) / oppositeDirection[0];
-                oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
-            }
-            if (oppositeEnd[1] > 10) {
-                var scale_to_wall = (10 - cueBallPosition[1]) / oppositeDirection[1];
-                oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
-            } else if (oppositeEnd[1] < -10) {
-                var scale_to_wall = (-10 - cueBallPosition[1]) / oppositeDirection[1];
-                oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
+            if (!cue_is_moving && this.effectMagnetCueBall && this.magnetShotNumber !== this.shots_made) {
+                this.effectMagnetCueBall = false;
             }
 
-            if (!this.effectRemoveTrajectory) this.draw_aim(context, program_state, cueBallPosition, oppositeEnd);
-        }
-        if (this.attached !== undefined) {
-            program_state.camera_inverse = this.attached().map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
-        }
+            this.draw_table(context, program_state, model_transform, t);
+            this.draw_wall(context, program_state, model_transform, t);
+            this.draw_pockets(context, program_state);
+            if (this.drag) {
+                const cueBallPosition = this.balls.find(ball => ball.isCueBall).position;
+                const oppositeDirection = this.initial_mouse_pos.minus(this.mouse_coords);
+                var oppositeEnd = cueBallPosition.plus(oppositeDirection);
 
+                //clamp to avoid walls
+                if (oppositeEnd[0] > 20) {
+                    var scale_to_wall = (20 - cueBallPosition[0]) / oppositeDirection[0];
+                    oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
+                } else if (oppositeEnd[0] < -20) {
+                    var scale_to_wall = (-20 - cueBallPosition[0]) / oppositeDirection[0];
+                    oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
+                }
+                if (oppositeEnd[1] > 10) {
+                    var scale_to_wall = (10 - cueBallPosition[1]) / oppositeDirection[1];
+                    oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
+                } else if (oppositeEnd[1] < -10) {
+                    var scale_to_wall = (-10 - cueBallPosition[1]) / oppositeDirection[1];
+                    oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
+                }
+
+                if (!this.effectRemoveTrajectory) this.draw_aim(context, program_state, cueBallPosition, oppositeEnd);
+            }
+            if (this.attached !== undefined) {
+                program_state.camera_inverse = this.attached().map((x, i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
+            }
+
+        }
     }
 
     display_stats(model_transform, text, context, program_state) {
@@ -462,8 +462,10 @@ export class Project_Scene extends Scene {
         });
         
         canvas.addEventListener('mouseup', (e) => {
-            //console.log("mouse up");
-            dragging = false;
+            if (!this.information_displayed)
+            {
+                //console.log("mouse up");
+                dragging = false;
             this.drag = false;
             // Reset the velocity of the cue ball when the mouse is released
             const cueBall = this.balls.find(ball => ball.isCueBall);
@@ -477,8 +479,7 @@ export class Project_Scene extends Scene {
                 //console.log(final_mouse_pos);
                 this.mouse_coords = final_mouse_pos;
                 var shoot_dir = (this.initial_mouse_pos.minus(final_mouse_pos)).times(3);
-                if(this.effectOppositeShot)
-                {
+                if (this.effectOppositeShot) {
                     this.effectOppositeShot = false;
                     shoot_dir = shoot_dir.times(-1);
                 }
@@ -487,7 +488,7 @@ export class Project_Scene extends Scene {
 
                 if (this.effectSpeedUpActive) {
                     shoot_dir = shoot_dir.times(5);
-                    this.effectSpeedUpActive = false; 
+                    this.effectSpeedUpActive = false;
                 }
 
                 if (this.effectRotateBoard) {
@@ -510,6 +511,7 @@ export class Project_Scene extends Scene {
                 this.initial_is_set = false;
                 this.shoot_processed = true;
             }
+        }
 
         });
     }
