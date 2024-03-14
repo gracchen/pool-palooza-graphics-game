@@ -92,6 +92,10 @@ export class Project_Scene extends Scene {
         this.loadSound('victory', './assets/victory.mp3');
         this.loadSound('defeat', './assets/defeat.mp3');
         // TODO: pocket, victory, defeat sounds when logic is implemented
+
+
+        // DIFFERENT EFFECTS
+        this.effectSpeedUpActive = false;
     }
 
     async loadSound(key, url) {
@@ -324,6 +328,11 @@ export class Project_Scene extends Scene {
                 var shoot_dir = (this.initial_mouse_pos.minus(final_mouse_pos)).times(3);
                 this.initial_shoot_dir = shoot_dir;
 
+                if (this.effectSpeedUpActive) {
+                    shoot_dir = shoot_dir.times(5);
+                    this.effectSpeedUpActive = false; 
+                }
+
                 if (cueBall) {
                     this.playSound('cueHit');
                     cueBall.velocity = cueBall.velocity.plus(shoot_dir);
@@ -361,17 +370,24 @@ export class Project_Scene extends Scene {
                         this.playSound('score');
                         this.balls_potted++;
                     }
-
-                    if (ball1.color === "#000000") {  // 8 ball logic
+                    
+                    // 8 BALL
+                    if (ball1.color === "#000000") {
                         if (this.balls.filter(b => b.isActive && !b.isCueBall).length > 1) {
-                            console.log("game end"); // TODO: game end logic
+                            console.log("game end");
                             this.game_is_over = true;
                         }
                     }
 
+                    // CUE BALL
                     if(ball1.isCueBall) {
-                        console.log("cue ball in pocket"); //TODO: game end logic
+                        console.log("cue ball in pocket");
                         this.game_is_over = true
+                    }
+
+                    // GREEN Speed up ball
+                    if (ball1.color === "#008000") { 
+                        this.effectSpeedUpActive = true;
                     }
 
                     ball1.isActive = false; 
