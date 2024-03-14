@@ -416,6 +416,7 @@ export class Project_Scene extends Scene {
                     if (ball1.color === "#000000") {
                         if (this.balls.filter(b => b.isActive && !b.isCueBall).length > 1) {
                             console.log("game end");
+                            this.playSound('defeat');
                             this.game_is_over = true;
                         }
                     }
@@ -423,6 +424,7 @@ export class Project_Scene extends Scene {
                     // CUE BALL
                     if(ball1.isCueBall) {
                         console.log("cue ball in pocket");
+                        this.playSound('defeat');
                         this.game_is_over = true
                     }
 
