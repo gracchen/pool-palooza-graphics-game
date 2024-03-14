@@ -431,9 +431,10 @@ export class Project_Scene extends Scene {
                         this.balls.forEach(ball => {
                             if (ball.isActive) {
                                 var newPos;
+                                var newBallPoses = [];
 
                                 while (true) {
-                                    newPos = vec3(Math.random() * 36 - 18, Math.random() * 16 - 8, 1);
+                                    newPos = vec3(Math.random() * 36 - 18, Math.random() * 14 - 7, 1);
 
                                     var tempOverlap = false;
 
@@ -443,10 +444,15 @@ export class Project_Scene extends Scene {
                                         }
                                     });
 
+                                    newBallPoses.forEach(pos1 => {
+                                        if ((pos1.minus(newPos)).norm() < 2) tempOverlap = true;
+                                    });
+
                                     if (!tempOverlap) break;
                                 }
 
                                 ball.position = newPos;
+                                newBallPoses.push(newPos);
                             }
                         });
                     }
