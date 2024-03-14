@@ -98,6 +98,7 @@ export class Project_Scene extends Scene {
         this.effectSpeedUpActive = false;
         this.effectRotateBoard = false;
         this.effectRemoveTrajectory = false;
+        this.effectChangeToBlack = false;
     }
 
     async loadSound(key, url) {
@@ -411,7 +412,13 @@ export class Project_Scene extends Scene {
                     if (ball1.color === "#800080") {
                         this.effectRemoveTrajectory = true;
                     }
-                
+
+                    if (this.effectChangeToBlack) this.effectChangeToBlack = false;
+
+                    // BLUE color change to black effect
+                    if (ball1.color === "#0000FF") {
+                        this.effectChangeToBlack = true;
+                    }
 
                     ball1.isActive = false; 
                 }
@@ -515,7 +522,8 @@ export class Project_Scene extends Scene {
 
     draw_ball(context, program_state, position, color) {
         let ball_transform = Mat4.translation(...position)
-        let ball_material = this.materials.ball.override({color: hex_color(color)});
+
+        let ball_material = this.effectChangeToBlack ? this.materials.ball.override({ color: hex_color("#000000")}) : this.materials.ball.override({color: hex_color(color)});
         
         this.shapes.ball.draw(context, program_state, ball_transform, ball_material);
     }
