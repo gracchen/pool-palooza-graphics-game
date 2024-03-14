@@ -105,6 +105,20 @@ export class Project_Scene extends Scene {
         this.effectRotateBoard = false;
         this.effectRemoveTrajectory = false;
         this.effectChangeToBlack = false;
+
+        // bg music
+        this.initializeBackgroundMusic();
+    }
+
+    initializeBackgroundMusic() {
+        if (!this.lobbyMusic) {
+            this.lobbyMusic = document.createElement('audio');
+            this.lobbyMusic.id = 'background-music';
+            this.lobbyMusic.autoplay = true;
+            this.lobbyMusic.loop = true;
+            this.lobbyMusic.src = 'assets/background.mp3';
+            document.body.appendChild(this.lobbyMusic);
+        }
     }
 
     async loadSound(key, url) {
@@ -140,8 +154,16 @@ export class Project_Scene extends Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("Cue ball POV", ["Control", "0"], () => this.attached = () => this.initial_camera_location);
-        this.new_line();
+        this.key_triggered_button("Toggle Music", ["m"], () => {
+            if (this.lobbyMusic) {
+                // If the music is paused or not currently playing, play it, otherwise pause
+                if (this.lobbyMusic.paused) {
+                    this.lobbyMusic.play().catch(e => console.error("Error playing music: ", e));
+                } else {
+                    this.lobbyMusic.pause();
+                }
+            }
+        });
     }
 
     display(context, program_state) {
