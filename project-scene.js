@@ -89,6 +89,7 @@ export class Project_Scene extends Scene {
         this.initial_is_set = false;
         this.shoot_processed = false;
 
+
         // audio
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.soundBuffers = {};
@@ -107,6 +108,8 @@ export class Project_Scene extends Scene {
         this.effectRemoveTrajectory = false;
         this.effectChangeToBlack = false;
         this.effectStickyWall = 0;
+        this.effectOppositeShot = false;
+        this.effectMagnetCueBall = false;
 
         // bg music
         this.initializeBackgroundMusic();
@@ -177,7 +180,6 @@ export class Project_Scene extends Scene {
         //text:
         this.game_is_over = false;
         this.game_is_victory = false;
-
         this.balls = [
             { position: vec3(8, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true, isActive: true }, // Cue ball
             { position: vec3(-8.4, 0, 1), velocity: vec3(0, 0, 0), color: "#FF0000", isCueBall: false, isActive: true }, // Red
@@ -206,6 +208,7 @@ export class Project_Scene extends Scene {
         this.effectRemoveTrajectory = false;
         this.effectChangeToBlack = false;
         this.effectStickyWall = 0;
+        this.effectMagnetCueBall = false;
 
         // bg music
         this.initializeBackgroundMusic();
@@ -300,9 +303,49 @@ export class Project_Scene extends Scene {
         var t_p2 = model_transform.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(8, 0, 0));
         this.balls.forEach(ball => {
             if (ball.isActive) {
-                this.draw_ball(context, program_state, ball.position, ball.color);
+                let cue_ball_position = this.balls.find(b => b.isCueBall).position; // Renamed the variable inside the find function to avoid conflict
+                if (this.effectMagnetCueBall && !ball.isCueBall && cue_is_moving) {
+                    console.log("INITIAL " + ball.position); // Corrected the spelling of "INITIAL"
+                    let attraction_force = vec3(0, 0, 0); // Initialized attraction_force as a vector
+
+                    // Calculate the direction vector from the ball to the cue ball
+                    let direction = cue_ball_position.minus(ball.position);
+
+                    // Calculate the distance between the ball and the cue ball
+                    let distance = direction.norm();
+
+                    // Normalize the direction vector
+                    direction.normalize();
+
+                    // Apply attraction force inversely proportional to the distance
+                    if (distance > 2) {
+                        attraction_force = direction.times(0.1 / distance);
+                    }
+
+                    this.balls.forEach(other_ball => {
+                            if (other_ball.color !== ball.color && attraction_force.norm() !== 0) {
+                                let overlap = other_ball.position.minus(ball.position.plus(attraction_force));
+                                if (overlap.norm() < 2.005) {
+                                    attraction_force = vec3(0, 0, 0);
+                                }
+                            }
+                        });
+
+                    // Update the position of the ball based on attraction force
+                    ball.position = ball.position.plus(attraction_force);
+
+                    // Ensure the ball stays on the same plane (e.g., Z = 1)
+                    ball.position[2] = 1;
+                    console.log("FINAL " + ball.position);
+                }
+                this.draw_ball(context, program_state, ball.position, ball.color, ball.isCueBall);
             }
         });
+
+        if(!cue_is_moving && this.effectMagnetCueBall && this.magnetShotNumber !== this.shots_made)
+        {
+            this.effectMagnetCueBall = false;
+        }
 
         this.draw_table(context, program_state, model_transform, t);
         this.draw_wall(context, program_state, model_transform, t);
@@ -375,7 +418,7 @@ export class Project_Scene extends Scene {
                 const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2;
                 this.initial_mouse_pos = vec3(x, y, 1);
                 this.mouse_coords = this.initial_mouse_pos;
-                console.log(this.initial_mouse_pos);
+               // console.log(this.initial_mouse_pos);
                 this.initial_is_set = true;
                 this.shoot_processed = false;
             }
@@ -399,7 +442,7 @@ export class Project_Scene extends Scene {
         });
         
         canvas.addEventListener('mouseup', (e) => {
-            console.log("mouse up");
+            //console.log("mouse up");
             dragging = false;
             this.drag = false;
             // Reset the velocity of the cue ball when the mouse is released
@@ -411,9 +454,15 @@ export class Project_Scene extends Scene {
                 const x = (((e.clientX - rect.left) / rect.width) - 0.5) * 23 * 2;
                 const y = (-(((e.clientY - rect.top) / rect.height) - 0.5)) * 12.7 * 2;
                 var final_mouse_pos = vec3(x, y, 1);
-                console.log(final_mouse_pos);
+                //console.log(final_mouse_pos);
                 this.mouse_coords = final_mouse_pos;
                 var shoot_dir = (this.initial_mouse_pos.minus(final_mouse_pos)).times(3);
+                if(this.effectOppositeShot)
+                {
+                    this.effectOppositeShot = false;
+                    shoot_dir = shoot_dir.times(-1);
+                }
+
                 this.initial_shoot_dir = shoot_dir;
 
                 if (this.effectSpeedUpActive) {
@@ -452,7 +501,7 @@ export class Project_Scene extends Scene {
     
             ball.velocity = ball.velocity.times(0.98); // Adjust the friction coefficient as needed
         });
-    
+
         this.collision_detected();
     }
     
@@ -480,7 +529,7 @@ export class Project_Scene extends Scene {
                     // 8 BALL
                     if (ball1.color === "#000000") {
                         if (this.balls.filter(b => b.isActive && !b.isCueBall).length > 1) {
-                            console.log("game end");
+                            //console.log("game end");
                             this.playSound('defeat');
                             this.game_is_over = true;
                         }
@@ -488,7 +537,7 @@ export class Project_Scene extends Scene {
 
                     // CUE BALL
                     if(ball1.isCueBall) {
-                        console.log("cue ball in pocket");
+                       // console.log("cue ball in pocket");
                         this.playSound('defeat');
                         this.game_is_over = true
                     }
@@ -520,6 +569,15 @@ export class Project_Scene extends Scene {
                         this.effectStickyWall = 2;
                     }
 
+                    if(ball1.color === "#FFC0CB") {
+                        this.effectMagnetCueBall = true;
+                        this.magnetShotNumber = this.shots_made;
+                    }
+
+                    //RED cue ball shoots in the opposite direction
+                    if (ball1.color === "#FF0000") {
+                        this.effectOppositeShot = true;
+                    }
                     // ORANGE randomize ball positions
                     if (ball1.color === "#FFA500") {
                         this.balls.forEach(ball => {
@@ -653,12 +711,12 @@ export class Project_Scene extends Scene {
         program_state.lights = [new Light(light_position, sun_color, 250)];
     }
 
-    draw_ball(context, program_state, position, color) {
-        let ball_transform = Mat4.translation(...position)
+    draw_ball(context, program_state, position, color, isCueBall) {
+        let ball_transform = Mat4.translation(...position);
+        let ball_material = this.effectChangeToBlack && !isCueBall ? this.materials.ball.override({ color: hex_color("#000000") }) : this.materials.ball.override({ color: hex_color(color) });
 
-        let ball_material = this.effectChangeToBlack ? this.materials.ball.override({ color: hex_color("#000000")}) : this.materials.ball.override({color: hex_color(color)});
-        
         this.shapes.ball.draw(context, program_state, ball_transform, ball_material);
     }
-    
+
+
 }
