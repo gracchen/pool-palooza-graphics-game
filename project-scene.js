@@ -51,6 +51,7 @@ export class Project_Scene extends Scene {
             diffusivity: .3, specularity: .5, smoothness: 10
         })
         this.game_is_over = false;
+        this.game_is_victory = false;
 
         // To show text you need a Material like this one:
         this.text_image = new Material(texture, {
@@ -79,7 +80,7 @@ export class Project_Scene extends Scene {
             { position: vec3(0, 10, 0.01)},
             { position: vec3(19.5, 9.5, 0.01)},
             { position: vec3(-19.5, 9.5, 0.01)},
-]
+        ]
         this.shots_made = 0;
         this.balls_potted = 0;
         
@@ -142,7 +143,6 @@ export class Project_Scene extends Scene {
         }
     }
 
-
     update(context, program_state) {
         const dt = program_state.animation_delta_time / 1000;
     
@@ -165,16 +165,65 @@ export class Project_Scene extends Scene {
                 }
             }
         });
+        this.key_triggered_button("Restart game", ["r"], () => {
+            this.reset();
+        });
     }
 
+    reset() {
+        this.drag = false;
+        this.mouse_coords = vec3(0,0,1);
+
+        //text:
+        this.game_is_over = false;
+        this.game_is_victory = false;
+
+        this.balls = [
+            { position: vec3(8, 0, 1), velocity: vec3(0, 0, 0), color: "#dfe6c1", isCueBall: true, isActive: true }, // Cue ball
+            { position: vec3(-8.4, 0, 1), velocity: vec3(0, 0, 0), color: "#FF0000", isCueBall: false, isActive: true }, // Red
+            { position: vec3(-10.2, 1, 1), velocity: vec3(0, 0, 0), color: "#FFA500", isCueBall: false, isActive: true }, // Orange
+            { position: vec3(-10.2, -1, 1), velocity: vec3(0, 0, 0), color: "#FFFF00", isCueBall: false, isActive: true }, // Yellow
+            { position: vec3(-12, 2, 1), velocity: vec3(0, 0, 0), color: "#013220", isCueBall: false, isActive: true }, // Green
+            { position: vec3(-12, 0, 1), velocity: vec3(0, 0, 0), color: "#000000", isCueBall: false, isActive: true }, // Black
+            { position: vec3(-12, -2, 1), velocity: vec3(0, 0, 0), color: "#800080", isCueBall: false, isActive: true }, // Purple
+            { position: vec3(-13.8, -3, 1), velocity: vec3(0, 0, 0), color: "#0000FF", isCueBall: false, isActive: true }, // Blue
+            { position: vec3(-13.8, -1, 1), velocity: vec3(0, 0, 0), color: "#FFC0CB", isCueBall: false, isActive: true }, // Pink
+            { position: vec3(-13.8, 1, 1), velocity: vec3(0, 0, 0), color: "#8B4513", isCueBall: false, isActive: true }, // Brown
+            { position: vec3(-13.8, 3, 1), velocity: vec3(0, 0, 0), color: "#808080", isCueBall: false, isActive: true }, // Gray
+        ];
+
+        this.shots_made = 0;
+        this.balls_potted = 0;
+
+        this.initial_camera_location = Mat4.look_at(vec3(0, 0, 30), vec3(0, 0, 0), vec3(0, 1, 0));
+
+        this.initial_is_set = false;
+        this.shoot_processed = false;
+
+        // DIFFERENT EFFECTS
+        this.effectSpeedUpActive = false;
+        this.effectRotateBoard = false;
+        this.effectRemoveTrajectory = false;
+        this.effectChangeToBlack = false;
+        this.effectStickyWall = 0;
+
+        // bg music
+        this.initializeBackgroundMusic();
+    }
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
 
         var cue_ball = this.balls.find(ball => ball.isCueBall)
 
-        if (this.game_is_over) {
-            this.game_over(context, program_state);
+        if (this.game_is_over || this.game_is_victory) {
+            if (this.game_is_over) {
+                let str = "   Game Over!\n\n Shots made: " + this.shots_made + "\n Balls potted: " + this.balls_potted +"\n\n\nPress r to restart";
+                this.display_stats(Mat4.identity(), str, context, program_state);
+            } else {
+                let str = " Congratulations!\n\n Shots made: " + this.shots_made + "\n Balls potted: " + this.balls_potted +"\n\n\nPress r to restart";
+                this.display_stats(Mat4.identity(), str, context, program_state);
+            }
             this.initial_camera_location = Mat4.identity().times(Mat4.translation(0,0,-10));
 
             if (!context.scratchpad.controls) {
@@ -184,6 +233,14 @@ export class Project_Scene extends Scene {
             }
             return;
         }
+
+        let stats_transform = Mat4.identity()
+            .times(Mat4.scale(0.7,0.7,1))
+            .times(Mat4.translation(-1,0.18,1))
+        ;
+        let str = "Shots made: " + this.shots_made + "    Balls potted: " + this.balls_potted;
+
+        this.display_stats(stats_transform, str, context, program_state);
 
         var cue_vel = cue_ball.velocity;
         var cue_is_moving = Math.sqrt(cue_vel.dot(cue_vel)) - 1 > 0.02;
@@ -279,16 +336,13 @@ export class Project_Scene extends Scene {
 
     }
 
-    game_over(context, program_state) {
+    display_stats(model_transform, text, context, program_state) {
         program_state.lights = [new Light(vec4(3, 2, 1, 0), color(1, 1, 1, 1), 1000000),
         new Light(vec4(3, 10, 10, 1), color(1, .7, .7, 1), 100000)];
         program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 4], [0, 0, 0], [0, 1, 0])));
         program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 500);
 
-        this.shapes.cube.draw(context, program_state, Mat4.identity(), this.grey);
-
-        let strings = ["", "", "", "",
-        "Game over!\nShots made: " + this.shots_made + "\nBalls potted: " + this.balls_potted, ""];
+        let strings = ["", "", "", "", text, ""];
 
         // Sample the "strings" array and draw them onto a cube.
         for (let i = 0; i < 3; i++)
@@ -301,14 +355,14 @@ export class Project_Scene extends Scene {
                 // Draw a Text_String for every line in our string, up to 30 lines:
                 for (let line of multi_line_string.slice(0, 30)) {             // Assign the string to Text_String, and then draw it.
                     this.shapes.text.set_string(line, context.context);
-                    this.shapes.text.draw(context, program_state, Mat4.identity().times(cube_side)
-                        .times(Mat4.scale(.03, .03, .03)), this.text_image);
+                    this.shapes.text.draw(context, program_state, model_transform.times(cube_side)
+                        .times(Mat4.scale(.06, .06, .06)), this.text_image);
                     // Move our basis down a line.
-                    cube_side.post_multiply(Mat4.translation(0, -.06, 0));
+                    cube_side.post_multiply(Mat4.translation(0, -.14, 0));
                 }
             }
         }
-        
+
     setup_mouse_controls(canvas, dt) {
         let dragging = false;
         const rect = canvas.getBoundingClientRect(); 
@@ -412,6 +466,12 @@ export class Project_Scene extends Scene {
             this.pockets.forEach(pocket =>{
                 const distance = ball1.position.minus(pocket.position).norm();
                 if (distance < 2 && ball1.isActive) {
+
+                    if (this.balls_potted === 9 && !ball1.isCueBall) {
+                        this.game_is_victory = true;
+                        this.balls_potted = 10;
+                    }
+
                     if (ball1.color !== "#000000" && !ball1.isCueBall) {
                         this.playSound('score');
                         this.balls_potted++;
