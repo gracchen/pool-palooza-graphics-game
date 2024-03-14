@@ -97,6 +97,7 @@ export class Project_Scene extends Scene {
         // DIFFERENT EFFECTS
         this.effectSpeedUpActive = false;
         this.effectRotateBoard = false;
+        this.effectRemoveTrajectory = false;
     }
 
     async loadSound(key, url) {
@@ -240,7 +241,7 @@ export class Project_Scene extends Scene {
                 oppositeEnd = cueBallPosition.plus(oppositeDirection.times(scale_to_wall));
             }
 
-            this.draw_aim(context, program_state, cueBallPosition, oppositeEnd);
+            if (!this.effectRemoveTrajectory) this.draw_aim(context, program_state, cueBallPosition, oppositeEnd);
         }
         if (this.attached !== undefined) {
             program_state.camera_inverse = this.attached().map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
@@ -340,6 +341,10 @@ export class Project_Scene extends Scene {
                     this.effectRotateBoard = false;
                 }
 
+                if (this.effectRemoveTrajectory) {
+                    this.effectRemoveTrajectory = false;
+                }
+
                 if (cueBall) {
                     this.playSound('cueHit');
                     cueBall.velocity = cueBall.velocity.plus(shoot_dir);
@@ -396,10 +401,17 @@ export class Project_Scene extends Scene {
                     if (ball1.color === "#008000") { 
                         this.effectSpeedUpActive = true;
                     }
-
+                    
+                    // BROWN Rotate board effect
                     if (ball1.color === "#8B4513") {
                         this.effectRotateBoard = true;
                     }
+
+                    // PURPLE remove trajectory line effect
+                    if (ball1.color === "#800080") {
+                        this.effectRemoveTrajectory = true;
+                    }
+                
 
                     ball1.isActive = false; 
                 }
