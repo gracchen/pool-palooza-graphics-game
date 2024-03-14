@@ -519,6 +519,7 @@ export class Project_Scene extends Scene {
                     if (this.balls_potted === 9 && !ball1.isCueBall) {
                         this.game_is_victory = true;
                         this.balls_potted = 10;
+                        this.playSound('victory');
                     }
 
                     if (ball1.color !== "#000000" && !ball1.isCueBall) {
