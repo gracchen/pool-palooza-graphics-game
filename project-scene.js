@@ -217,7 +217,7 @@ export class Project_Scene extends Scene {
         this.effectMagnetCueBall = false;
 
         // bg music
-        this.initializeBackgroundMusic();
+        this.lobbyMusic.play().catch(e => console.error("Error playing music: ", e));
     }
     display(context, program_state) {
         // display():  Called once per frame of animation.
@@ -542,6 +542,7 @@ export class Project_Scene extends Scene {
                         this.game_is_victory = true;
                         this.balls_potted = 10;
                         this.playSound('victory');
+                        this.lobbyMusic.pause();
                     }
 
                     if (ball1.color !== "#000000" && !ball1.isCueBall) {
@@ -554,7 +555,10 @@ export class Project_Scene extends Scene {
                         if (this.balls.filter(b => b.isActive && !b.isCueBall).length > 1) {
                             //console.log("game end");
                             this.playSound('defeat');
+                            console.log("pausing music?")
                             this.game_is_over = true;
+                            this.lobbyMusic.pause();
+
                         }
                     }
 
@@ -563,6 +567,7 @@ export class Project_Scene extends Scene {
                        // console.log("cue ball in pocket");
                         this.playSound('defeat');
                         this.game_is_over = true
+                        this.lobbyMusic.pause();
                     }
 
                     // GREEN Speed up ball
